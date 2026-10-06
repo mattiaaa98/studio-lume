@@ -1300,8 +1300,7 @@ staff(name),
 services(name,price,duration_minutes)
 `)
 .eq('salon_id',salonId)
-.order('date')
-.order('start_time'),
+.order('starts_at'),
 
 supabaseClient
 .from('staff')
@@ -1360,15 +1359,46 @@ icon:'✂️'
 /* APPUNTAMENTI */
 
 appointments=
-appointmentsResult.data.map(x=>({
+appointmentsResult.data.map(x=>{
+
+const start=new Date(x.starts_at);
+
+const italianDate=
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}
+).format(start);
+
+const parts=italianDate.split('/');
+
+const date=
+parts[2]+'-'+
+parts[1]+'-'+
+parts[0];
+
+const time=
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+hour:'2-digit',
+minute:'2-digit',
+hour12:false
+}
+).format(start);
+
+return {
 
 id:x.id,
 
-date:x.date,
+date:date,
 
-time:
-String(x.start_time)
-.slice(0,5),
+time:time,
 
 name:
 x.customers?.name ||
@@ -1393,9 +1423,15 @@ x.staff?.name ||
 '',
 
 status:
-x.status
+x.status,
 
-}));
+starts_at:x.starts_at,
+
+ends_at:x.ends_at
+
+};
+
+});
 
 
 /* PROFESSIONISTI */
