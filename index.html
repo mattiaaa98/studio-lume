@@ -362,71 +362,192 @@ background:var(--surface2);
    AGENDA GESTIONALE
 ========================= */
 
+.agenda-toolbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:16px;
+margin-bottom:18px;
+}
+
+.agenda-toolbar-left{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.agenda-toolbar-right{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.month-title{
+font:500 28px Georgia,serif;
+min-width:230px;
+text-align:center;
+text-transform:capitalize;
+}
+
+.agenda-nav{
+border:1px solid var(--line);
+background:var(--surface);
+color:var(--text);
+width:40px;
+height:40px;
+border-radius:11px;
+cursor:pointer;
+font-size:24px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.agenda-nav:hover{
+background:var(--surface2);
+}
+
+.agenda-today{
+border:1px solid var(--line);
+background:var(--surface);
+color:var(--text);
+padding:10px 14px;
+border-radius:11px;
+cursor:pointer;
+font-weight:700;
+}
+
+.agenda-today:hover{
+background:var(--surface2);
+}
+
+.agenda-summary{
+font-size:13px;
+color:var(--muted);
+margin-bottom:12px;
+}
+
 .calendar{
 display:grid;
-grid-template-columns:repeat(5,minmax(220px,1fr));
-gap:16px;
+grid-template-columns:repeat(7,minmax(145px,1fr));
+gap:8px;
 overflow-x:auto;
 padding:4px 4px 16px;
+}
+
+.calendar-weekday{
+font-size:12px;
+font-weight:800;
+text-transform:uppercase;
+letter-spacing:.08em;
+color:var(--muted);
+padding:8px 10px;
 }
 
 .day{
 background:var(--surface);
 border:1px solid var(--line);
-border-radius:20px;
-min-height:720px;
-padding:18px;
-box-shadow:0 8px 25px #00000008;
+border-radius:15px;
+min-height:145px;
+padding:10px;
+box-shadow:0 5px 18px #00000008;
+transition:.15s;
+}
+
+.day:hover{
+border-color:var(--accent);
+}
+
+.day.other-month{
+opacity:.42;
+}
+
+.day.today{
+border:2px solid var(--accent);
 }
 
 .dayhead{
+display:flex;
+align-items:center;
+justify-content:space-between;
 font-weight:800;
-font-size:15px;
-text-transform:capitalize;
-padding-bottom:14px;
-margin-bottom:14px;
-border-bottom:2px solid var(--line);
-position:sticky;
-top:0;
-background:var(--surface);
-z-index:2;
+font-size:14px;
+margin-bottom:9px;
+}
+
+.day-number{
+display:flex;
+align-items:center;
+justify-content:center;
+width:30px;
+height:30px;
+border-radius:50%;
+}
+
+.day.today .day-number{
+background:var(--accent);
+color:white;
+}
+
+.day-count{
+font-size:10px;
+color:var(--muted);
+font-weight:700;
 }
 
 .appt{
-padding:15px;
-border-radius:14px;
+padding:8px 9px;
+border-radius:9px;
 background:var(--accent2);
-border-left:4px solid var(--accent);
-margin-bottom:12px;
-font-size:14px;
-line-height:1.45;
-box-shadow:0 4px 12px #0000000a;
+border-left:3px solid var(--accent);
+margin-bottom:6px;
+font-size:11px;
+line-height:1.35;
+cursor:pointer;
+transition:.15s;
+box-shadow:none;
+}
+
+.appt:hover{
+transform:translateY(-1px);
+box-shadow:0 4px 12px #0002;
 }
 
 .appt b{
 display:block;
-font-size:16px;
-margin-bottom:7px;
+font-size:12px;
+margin-bottom:3px;
 }
 
 .appt .mini{
 display:block;
-margin-top:7px;
-line-height:1.4;
+font-size:10px;
+margin-top:3px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
 }
 
-.status{
-color:var(--ok);
-font-size:11px;
-font-weight:800;
-margin-top:10px;
-padding-top:8px;
-border-top:1px solid var(--line);
+.calendar-empty{
+min-height:145px;
+visibility:hidden;
 }
 
-.status button{
-font-size:11px;
-padding:2px 5px;
+@media(max-width:850px){
+
+.calendar{
+grid-template-columns:repeat(7,minmax(130px,1fr));
+}
+
+.month-title{
+font-size:22px;
+min-width:180px;
+}
+
+.agenda-toolbar{
+flex-wrap:wrap;
+}
+
 }
 
 /* =========================
@@ -1479,6 +1600,82 @@ JSON.stringify(appointments)
    DASHBOARD
 ========================= */
 
+/* =========================
+   AGENDA MENSILE - FUNZIONI
+========================= */
+
+function romeDateKey(date){
+
+const parts =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}
+).formatToParts(date);
+
+const year =
+parts.find(p=>p.type==='year').value;
+
+const month =
+parts.find(p=>p.type==='month').value;
+
+const day =
+parts.find(p=>p.type==='day').value;
+
+return `${year}-${month}-${day}`;
+
+}
+
+
+async function cancelAppointment(id){
+
+if(!id)
+return;
+
+try{
+
+const {
+error
+} =
+await supabaseClient
+.from('appointments')
+.update({
+status:'cancelled'
+})
+.eq(
+'id',
+id
+);
+
+if(error)
+throw error;
+
+toast(
+'Appuntamento annullato'
+);
+
+await loadData();
+
+renderAdmin(
+'agenda'
+);
+
+}catch(error){
+
+console.error(error);
+
+toast(
+'Impossibile annullare l’appuntamento.'
+);
+
+}
+
+}
+
 function renderAdmin(
 view='agenda'
 ){
@@ -1514,32 +1711,493 @@ appointments.length+
 
 if(view==='agenda'){
 
+/* =========================
+   AGENDA MENSILE
+========================= */
+
+if(view==='agenda'){
+
 $('dashTitle').textContent =
 'Agenda del salone';
 
-const days = [
-0,1,2,3,4
-].map(i=>{
 
-let d =
+/*
+   Mantiene il mese selezionato
+   anche quando si aggiorna la pagina
+*/
+
+if(!window.agendaMonth){
+
+window.agendaMonth =
 new Date();
 
-d.setHours(
-12,
-0,
-0,
+window.agendaMonth.setDate(1);
+
+}
+
+
+const monthDate =
+new Date(window.agendaMonth);
+
+const year =
+monthDate.getFullYear();
+
+const month =
+monthDate.getMonth();
+
+
+const monthName =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+month:'long',
+year:'numeric'
+}
+).format(monthDate);
+
+
+const firstDay =
+new Date(
+year,
+month,
+1
+);
+
+
+const lastDay =
+new Date(
+year,
+month+1,
 0
 );
 
-d.setDate(
-d.getDate()-
-d.getDay()+
-1+
-i
+
+let startOffset =
+firstDay.getDay()-1;
+
+
+if(startOffset<0){
+
+startOffset=6;
+
+}
+
+
+const totalDays =
+lastDay.getDate();
+
+
+const previousMonthDays =
+new Date(
+year,
+month,
+0
+).getDate();
+
+
+const totalCells =
+Math.ceil(
+(startOffset+totalDays)/7
+)*7;
+
+
+const todayKey =
+romeDateKey(
+new Date()
 );
 
-return d;
 
+const weekdays = [
+'Lun',
+'Mar',
+'Mer',
+'Gio',
+'Ven',
+'Sab',
+'Dom'
+];
+
+
+const monthAppointments =
+appointments.filter(a=>{
+
+if(!a.date)
+return false;
+
+const parts =
+a.date.split('-');
+
+return(
+Number(parts[0])===year &&
+Number(parts[1])===month+1
+);
+
+});
+
+
+const confirmedMonthAppointments =
+monthAppointments.filter(
+a=>a.status!=='cancelled'
+);
+
+
+content.innerHTML = `
+
+<div class="agenda-toolbar">
+
+<div class="agenda-toolbar-left">
+
+<button
+class="agenda-nav"
+id="prevMonth"
+title="Mese precedente"
+>
+‹
+</button>
+
+<div class="month-title">
+${monthName}
+</div>
+
+<button
+class="agenda-nav"
+id="nextMonth"
+title="Mese successivo"
+>
+›
+</button>
+
+</div>
+
+
+<div class="agenda-toolbar-right">
+
+<button
+class="agenda-today"
+id="todayMonth"
+>
+Oggi
+</button>
+
+</div>
+
+</div>
+
+
+<div class="agenda-summary">
+
+<strong>
+${confirmedMonthAppointments.length}
+</strong>
+
+${confirmedMonthAppointments.length===1
+?'appuntamento'
+:'appuntamenti'}
+
+nel mese
+
+</div>
+
+
+<div class="calendar">
+
+
+${weekdays.map(day=>`
+
+<div class="calendar-weekday">
+${day}
+</div>
+
+`).join('')}
+
+
+${Array.from(
+{
+length:totalCells
+},
+(_,index)=>{
+
+
+let dayNumber =
+index-startOffset+1;
+
+
+let cellYear =
+year;
+
+let cellMonth =
+month;
+
+
+/* Giorni del mese precedente */
+
+if(dayNumber<1){
+
+dayNumber =
+previousMonthDays+
+dayNumber;
+
+cellMonth =
+month-1;
+
+
+if(cellMonth<0){
+
+cellMonth=11;
+
+cellYear=year-1;
+
+}
+
+}
+
+
+/* Giorni del mese successivo */
+
+else if(dayNumber>totalDays){
+
+dayNumber =
+dayNumber-totalDays;
+
+cellMonth =
+month+1;
+
+
+if(cellMonth>11){
+
+cellMonth=0;
+
+cellYear=year+1;
+
+}
+
+}
+
+
+const dateKey =
+cellYear+
+'-'+
+String(cellMonth+1)
+.padStart(2,'0')+
+'-'+
+String(dayNumber)
+.padStart(2,'0');
+
+
+const isCurrentMonth =
+cellYear===year &&
+cellMonth===month;
+
+
+const isToday =
+dateKey===todayKey;
+
+
+const list =
+appointments
+.filter(a=>
+a.date===dateKey &&
+a.status!=='cancelled'
+)
+.sort(
+(a,b)=>
+a.time.localeCompare(b.time)
+);
+
+
+return `
+
+<div
+class="day
+${isCurrentMonth?'':'other-month'}
+${isToday?'today':''}"
+>
+
+
+<div class="dayhead">
+
+<span class="day-number">
+${dayNumber}
+</span>
+
+
+${
+list.length
+?
+`<span class="day-count">
+${list.length}
+${list.length===1?'app.':'app.'}
+</span>`
+:
+''
+}
+
+</div>
+
+
+${
+list.length
+
+?
+
+list.map(a=>`
+
+<div
+class="appt"
+data-appointment="${a.id}"
+title="Clicca per gestire l'appuntamento"
+>
+
+<b>
+${a.time} · ${a.name}
+</b>
+
+
+<div>
+${a.service}
+</div>
+
+
+<span class="mini">
+${a.stylist || 'Professionista'}
+</span>
+
+</div>
+
+`).join('')
+
+
+:
+
+`<div class="mini">
+Nessun appuntamento
+</div>`
+
+}
+
+</div>
+
+`;
+
+}
+
+).join('')}
+
+
+</div>
+
+`;
+
+
+/* =========================
+   NAVIGAZIONE MESI
+========================= */
+
+$('prevMonth').onclick =
+()=>{
+
+window.agendaMonth =
+new Date(
+year,
+month-1,
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+
+$('nextMonth').onclick =
+()=>{
+
+window.agendaMonth =
+new Date(
+year,
+month+1,
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+
+$('todayMonth').onclick =
+()=>{
+
+const now =
+new Date();
+
+window.agendaMonth =
+new Date(
+now.getFullYear(),
+now.getMonth(),
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+
+/* =========================
+   GESTIONE APPUNTAMENTO
+========================= */
+
+document
+.querySelectorAll('[data-appointment]')
+.forEach(card=>{
+
+card.onclick =
+()=>{
+
+const appointment =
+appointments.find(
+a=>
+a.id===
+card.dataset.appointment
+);
+
+
+if(!appointment)
+return;
+
+
+const message =
+`Cliente: ${appointment.name}
+Telefono: ${appointment.phone||'—'}
+Servizio: ${appointment.service}
+Data: ${appointment.date}
+Orario: ${appointment.time}
+Professionista: ${appointment.stylist||'—'}
+Stato: ${appointment.status}
+
+Vuoi annullare questo appuntamento?`;
+
+
+if(
+appointment.status==='confirmed' &&
+confirm(message)
+){
+
+cancelAppointment(
+appointment.id
+);
+
+}
+
+};
+
+});
+
+}
 });
 
 content.innerHTML = `
