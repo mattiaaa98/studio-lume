@@ -4,66 +4,2908 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Studio Lume — Prenotazioni</title>
+
 <style>
-:root{color-scheme:light dark;--bg:light-dark(#f7f4ef,#171513);--surface:light-dark(#fff,#211f1d);--surface2:light-dark(#f1ece5,#2a2724);--text:light-dark(#26231f,#f5f0e9);--muted:light-dark(#756e66,#b8afa5);--line:light-dark(#ded6cc,#3d3833);--accent:light-dark(#8b5e3c,#d8a47c);--accent2:light-dark(#ead8c8,#3b2d24)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}.app{min-height:100vh}.header{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 6vw;position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);z-index:5}.brand{font-family:Georgia,serif;font-size:24px}.nav{display:flex;gap:8px}.nav button,.ghost{border:0;background:transparent;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}.nav button.active,.nav button:hover,.ghost:hover{background:var(--surface2)}main{max-width:1180px;margin:auto;padding:48px 24px 72px}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:end;margin-bottom:42px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--accent);font-weight:700}.hero h1{font:500 clamp(42px,6vw,76px)/.98 Georgia,serif;margin:12px 0 18px;max-width:720px}.hero p{font-size:17px;line-height:1.65;color:var(--muted);max-width:620px}.hero-card,.panel{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px}.hero-card{border-radius:24px;box-shadow:0 18px 50px #0000000d}.hero-card strong{font-size:28px}.mini{color:var(--muted);font-size:13px;margin-top:7px}.section-title{display:flex;align-items:end;justify-content:space-between;margin:32px 0 16px}.section-title h2{font:500 28px Georgia,serif;margin:0}.services{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.service{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;transition:.18s}.service:hover,.service.selected{border-color:var(--accent);transform:translateY(-2px)}.service .icon{font-size:22px}.service h3{margin:14px 0 7px;font-size:16px}.service p{color:var(--muted);font-size:13px;line-height:1.45;min-height:38px}.price{font-weight:700;margin-top:15px}.booking{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-top:28px}.steps{display:flex;gap:8px;margin-bottom:24px}.step{flex:1;height:5px;background:var(--surface2);border-radius:9px}.step.done{background:var(--accent)}label{display:block;font-size:13px;font-weight:700;margin:18px 0 8px}select,input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit}.times{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.time{padding:11px;border:1px solid var(--line);background:var(--surface2);border-radius:11px;cursor:pointer;color:var(--text)}.time:hover,.time.selected{background:var(--accent);color:white;border-color:var(--accent)}.time:disabled{opacity:.45;cursor:not-allowed}.summary{position:sticky;top:96px;height:max-content}.summary h3{font:500 23px Georgia,serif;margin-top:0}.sumrow{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}.sumrow span:last-child{font-weight:700}.primary{width:100%;border:0;border-radius:13px;background:var(--accent);color:white;padding:14px;font-weight:800;font-size:15px;cursor:pointer;margin-top:18px}.primary:hover{filter:brightness(1.05)}.primary:disabled{opacity:.6;cursor:not-allowed}.dashboard{display:none}.dashgrid{display:grid;grid-template-columns:240px 1fr;gap:20px}.sidebar{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;height:max-content}.sidebtn{width:100%;text-align:left;border:0;background:transparent;color:var(--text);padding:12px;border-radius:11px;cursor:pointer}.sidebtn.active,.sidebtn:hover{background:var(--surface2)}
-.agenda-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.agenda-toolbar-left,.agenda-toolbar-right{display:flex;align-items:center;gap:8px}.month-title{font:500 28px Georgia,serif;min-width:230px;text-align:center;text-transform:capitalize}.agenda-nav{border:1px solid var(--line);background:var(--surface);color:var(--text);width:40px;height:40px;border-radius:11px;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center}.agenda-nav:hover,.agenda-today:hover{background:var(--surface2)}.agenda-today{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:10px 14px;border-radius:11px;cursor:pointer;font-weight:700}.agenda-summary{font-size:13px;color:var(--muted);margin-bottom:12px}.calendar{display:grid;grid-template-columns:repeat(7,minmax(145px,1fr));gap:8px;overflow-x:auto;padding:4px 4px 16px}.calendar-weekday{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:8px 10px}.day{background:var(--surface);border:1px solid var(--line);border-radius:15px;min-height:145px;padding:10px;box-shadow:0 5px 18px #00000008;transition:.15s}.day:hover{border-color:var(--accent)}.day.other-month{opacity:.42}.day.today{border:2px solid var(--accent)}.dayhead{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:9px}.day-number{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%}.day.today .day-number{background:var(--accent);color:white}.day-count{font-size:10px;color:var(--muted);font-weight:700}.appt{padding:8px 9px;border-radius:9px;background:var(--accent2);border-left:3px solid var(--accent);margin-bottom:6px;font-size:11px;line-height:1.35;cursor:pointer;transition:.15s}.appt:hover{transform:translateY(-1px);box-shadow:0 4px 12px #0002}.appt b{display:block;font-size:12px;margin-bottom:3px}.appt .mini{display:block;font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toast{position:fixed;right:24px;bottom:24px;background:var(--text);color:var(--bg);padding:14px 18px;border-radius:13px;display:none;z-index:10;box-shadow:0 12px 35px #0003}table th{font-size:13px;color:var(--muted)}table td{font-size:14px}.calendar::-webkit-scrollbar{height:8px}.calendar::-webkit-scrollbar-track{background:var(--surface2);border-radius:10px}.calendar::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
-@media(max-width:850px){.hero,.booking,.dashgrid{grid-template-columns:1fr}.services{grid-template-columns:repeat(2,1fr)}.calendar{grid-template-columns:repeat(7,minmax(130px,1fr));overflow-x:auto}.day{min-height:145px}.summary{position:static}.header{padding:0 18px}.nav button{padding:9px}.hero{gap:18px}.agenda-toolbar{flex-wrap:wrap}.month-title{font-size:22px;min-width:180px}}@media(max-width:500px){main{padding:30px 16px}.services{grid-template-columns:1fr}.times{grid-template-columns:repeat(3,1fr)}.hero h1{font-size:48px}}
+:root{
+  color-scheme:light dark;
+  --bg:light-dark(#f7f4ef,#171513);
+  --surface:light-dark(#fff,#211f1d);
+  --surface2:light-dark(#f1ece5,#2a2724);
+  --text:light-dark(#26231f,#f5f0e9);
+  --muted:light-dark(#756e66,#b8afa5);
+  --line:light-dark(#ded6cc,#3d3833);
+  --accent:light-dark(#8b5e3c,#d8a47c);
+  --accent2:light-dark(#ead8c8,#3b2d24);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
+}
+
+.app{
+  min-height:100vh;
+}
+
+.header{
+  height:72px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 6vw;
+  position:sticky;
+  top:0;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(14px);
+  z-index:5;
+}
+
+.brand{
+  font-family:Georgia,serif;
+  font-size:24px;
+}
+
+.nav{
+  display:flex;
+  gap:8px;
+}
+
+.nav button,
+.ghost{
+  border:0;
+  background:transparent;
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.nav button.active,
+.nav button:hover,
+.ghost:hover{
+  background:var(--surface2);
+}
+
+main{
+  max-width:1180px;
+  margin:auto;
+  padding:48px 24px 72px;
+}
+
+.hero{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:32px;
+  align-items:end;
+  margin-bottom:42px;
+}
+
+.eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-size:12px;
+  color:var(--accent);
+  font-weight:700;
+}
+
+.hero h1{
+  font:500 clamp(42px,6vw,76px)/.98 Georgia,serif;
+  margin:12px 0 18px;
+  max-width:720px;
+}
+
+.hero p{
+  font-size:17px;
+  line-height:1.65;
+  color:var(--muted);
+  max-width:620px;
+}
+
+.hero-card,
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:24px;
+}
+
+.hero-card{
+  border-radius:24px;
+  box-shadow:0 18px 50px #0000000d;
+}
+
+.hero-card strong{
+  font-size:28px;
+}
+
+.mini{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:7px;
+}
+
+.section-title{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  margin:32px 0 16px;
+}
+
+.section-title h2{
+  font:500 28px Georgia,serif;
+  margin:0;
+}
+
+.services{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+
+.service{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:20px;
+  cursor:pointer;
+  transition:.18s;
+}
+
+.service:hover,
+.service.selected{
+  border-color:var(--accent);
+  transform:translateY(-2px);
+}
+
+.service .icon{
+  font-size:22px;
+}
+
+.service h3{
+  margin:14px 0 7px;
+  font-size:16px;
+}
+
+.service p{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+  min-height:38px;
+}
+
+.price{
+  font-weight:700;
+  margin-top:15px;
+}
+
+.booking{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:20px;
+  margin-top:28px;
+}
+
+.steps{
+  display:flex;
+  gap:8px;
+  margin-bottom:24px;
+}
+
+.step{
+  flex:1;
+  height:5px;
+  background:var(--surface2);
+  border-radius:9px;
+}
+
+.step.done{
+  background:var(--accent);
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin:18px 0 8px;
+}
+
+select,
+input{
+  width:100%;
+  padding:13px 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--surface2);
+  color:var(--text);
+  font:inherit;
+}
+
+.times{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+}
+
+.time{
+  padding:11px;
+  border:1px solid var(--line);
+  background:var(--surface2);
+  border-radius:11px;
+  cursor:pointer;
+  color:var(--text);
+}
+
+.time:hover,
+.time.selected{
+  background:var(--accent);
+  color:white;
+  border-color:var(--accent);
+}
+
+.time:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.summary{
+  position:sticky;
+  top:96px;
+  height:max-content;
+}
+
+.summary h3{
+  font:500 23px Georgia,serif;
+  margin-top:0;
+}
+
+.sumrow{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+}
+
+.sumrow span:last-child{
+  font-weight:700;
+}
+
+.primary{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  background:var(--accent);
+  color:white;
+  padding:14px;
+  font-weight:800;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:18px;
+}
+
+.primary:hover{
+  filter:brightness(1.05);
+}
+
+.primary:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.dashboard{
+  display:none;
+}
+
+.dashgrid{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  gap:20px;
+}
+
+.sidebar{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px;
+  height:max-content;
+}
+
+.sidebtn{
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:var(--text);
+  padding:12px;
+  border-radius:11px;
+  cursor:pointer;
+}
+
+.sidebtn.active,
+.sidebtn:hover{
+  background:var(--surface2);
+}
+
+/* =========================
+   AGENDA MENSILE
+========================= */
+
+.agenda-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.agenda-toolbar-left,
+.agenda-toolbar-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.month-title{
+  font:500 28px Georgia,serif;
+  min-width:230px;
+  text-align:center;
+  text-transform:capitalize;
+}
+
+.agenda-nav{
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--text);
+  width:40px;
+  height:40px;
+  border-radius:11px;
+  cursor:pointer;
+  font-size:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.agenda-nav:hover,
+.agenda-today:hover{
+  background:var(--surface2);
+}
+
+.agenda-today{
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:11px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.agenda-summary{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(145px,1fr));
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 4px 16px;
+}
+
+.calendar-weekday{
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--muted);
+  padding:8px 10px;
+}
+
+.day{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:15px;
+  min-height:145px;
+  padding:10px;
+  box-shadow:0 5px 18px #00000008;
+  transition:.15s;
+}
+
+.day:hover{
+  border-color:var(--accent);
+}
+
+.day.other-month{
+  opacity:.42;
+}
+
+.day.today{
+  border:2px solid var(--accent);
+}
+
+.dayhead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:9px;
+}
+
+.day-number{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+}
+
+.day.today .day-number{
+  background:var(--accent);
+  color:white;
+}
+
+.day-count{
+  font-size:10px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.appt{
+  padding:8px 9px;
+  border-radius:9px;
+  background:var(--accent2);
+  border-left:3px solid var(--accent);
+  margin-bottom:6px;
+  font-size:11px;
+  line-height:1.35;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.appt:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px #0002;
+}
+
+.appt b{
+  display:block;
+  font-size:12px;
+  margin-bottom:3px;
+}
+
+.appt .mini{
+  display:block;
+  font-size:10px;
+  margin-top:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.toast{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  background:var(--text);
+  color:var(--bg);
+  padding:14px 18px;
+  border-radius:13px;
+  display:none;
+  z-index:10;
+  box-shadow:0 12px 35px #0003;
+}
+
+table th{
+  font-size:13px;
+  color:var(--muted);
+}
+
+table td{
+  font-size:14px;
+}
+
+.calendar::-webkit-scrollbar{
+  height:8px;
+}
+
+.calendar::-webkit-scrollbar-track{
+  background:var(--surface2);
+  border-radius:10px;
+}
+
+.calendar::-webkit-scrollbar-thumb{
+  background:var(--line);
+  border-radius:10px;
+}
+
+@media(max-width:850px){
+
+  .hero,
+  .booking,
+  .dashgrid{
+    grid-template-columns:1fr;
+  }
+
+  .services{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .calendar{
+    grid-template-columns:repeat(7,minmax(130px,1fr));
+    overflow-x:auto;
+  }
+
+  .day{
+    min-height:145px;
+  }
+
+  .summary{
+    position:static;
+  }
+
+  .header{
+    padding:0 18px;
+  }
+
+  .nav button{
+    padding:9px;
+  }
+
+  .hero{
+    gap:18px;
+  }
+
+  .agenda-toolbar{
+    flex-wrap:wrap;
+  }
+
+  .month-title{
+    font-size:22px;
+    min-width:180px;
+  }
+}
+
+@media(max-width:500px){
+
+  main{
+    padding:30px 16px;
+  }
+
+  .services{
+    grid-template-columns:1fr;
+  }
+
+  .times{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+  .hero h1{
+    font-size:48px;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <div class="app">
-<header class="header"><div class="brand">STUDIO LUME</div><nav class="nav"><button id="clientTab" class="active">Prenota</button><button id="adminTab">Area salone</button></nav></header>
+
+<header class="header">
+
+<div class="brand">
+STUDIO LUME
+</div>
+
+<nav class="nav">
+
+<button id="clientTab" class="active">
+Prenota
+</button>
+
+<button id="adminTab">
+Area salone
+</button>
+
+</nav>
+
+</header>
+
 <main>
-<section id="loginView" style="display:none;max-width:460px;margin:70px auto"><div class="panel"><div class="eyebrow">Accesso riservato</div><h2 style="font:500 34px Georgia,serif;margin:8px 0 12px">Area del tuo salone</h2><p class="mini" style="font-size:14px;line-height:1.6">Ogni negozio avrà un accesso separato e vedrà solo i propri appuntamenti, clienti e servizi.</p><label for="loginEmail">Email</label><input id="loginEmail" type="email" placeholder="titolare@salone.it"><label for="loginPassword">Password</label><input id="loginPassword" type="password" placeholder="••••••••"><button class="primary" id="loginBtn">Accedi al gestionale</button><div id="loginMsg" class="mini" style="text-align:center;margin-top:14px"></div></div></section>
-<section id="clientView"><div class="hero"><div><div class="eyebrow">Hair studio · Milano</div><h1>Il tuo momento,<br><em>senza attese.</em></h1><p>Prenota online il tuo appuntamento in pochi secondi. Scegli il servizio, l'orario e lascia il resto a noi.</p></div><div class="hero-card"><div class="eyebrow">Oggi</div><strong>09:00 — 19:00</strong><div class="mini">Martedì · ultimo appuntamento 18:00</div></div></div>
-<div class="section-title"><h2>Scegli il servizio</h2><span class="mini">Passo 1 di 2</span></div><div class="services" id="services"></div>
-<div class="booking"><div class="panel"><div class="steps"><div class="step done"></div><div class="step" id="step2"></div></div><div class="eyebrow">Disponibilità</div><h2 style="font:500 28px Georgia,serif;margin:8px 0">Quando vuoi venire?</h2><label for="date">Data</label><input id="date" type="date"><label for="stylist">Professionista</label><select id="stylist"></select><label>Orari disponibili</label><div class="times" id="times"></div><label for="name">Nome</label><input id="name" placeholder="Il tuo nome"><label for="phone">Telefono</label><input id="phone" placeholder="333 123 4567" inputmode="tel"><button class="primary" id="confirm">Conferma prenotazione</button></div>
-<aside class="panel summary"><div class="eyebrow">Riepilogo</div><h3>Il tuo appuntamento</h3><div class="sumrow"><span>Servizio</span><span id="sumService">—</span></div><div class="sumrow"><span>Durata</span><span id="sumDuration">—</span></div><div class="sumrow"><span>Prezzo</span><span id="sumPrice">—</span></div><div class="sumrow"><span>Data</span><span id="sumDate">—</span></div><div class="sumrow"><span>Orario</span><span id="sumTime">—</span></div></aside></div></section>
-<section id="dashboard" class="dashboard"><div class="section-title"><div><div class="eyebrow">Gestionale</div><h2 id="dashTitle">Agenda del salone</h2></div><div><button class="ghost" id="logoutBtn">Esci</button><button class="ghost" id="backClient">← Prenotazione cliente</button></div></div><div class="dashgrid"><aside class="sidebar"><button class="sidebtn active" data-view="agenda">📅 Agenda</button><button class="sidebtn" data-view="servicesAdmin">✂ Servizi</button><button class="sidebtn" data-view="clients">👥 Clienti</button><button class="sidebtn" data-view="settings">⚙ Impostazioni</button><div style="margin-top:25px;border-top:1px solid var(--line);padding-top:18px"><div class="mini">Incasso previsto</div><div style="font-size:27px;font-weight:800;margin-top:5px" id="revenue">€ 0</div><div class="mini" id="countInfo"></div></div></aside><div id="adminContent"></div></div></section>
-</main><div class="toast" id="toast"></div></div>
+
+<!-- LOGIN -->
+
+<section
+id="loginView"
+style="display:none;max-width:460px;margin:70px auto"
+>
+
+<div class="panel">
+
+<div class="eyebrow">
+Accesso riservato
+</div>
+
+<h2 style="font:500 34px Georgia,serif;margin:8px 0 12px">
+Area del tuo salone
+</h2>
+
+<p
+class="mini"
+style="font-size:14px;line-height:1.6"
+>
+Ogni negozio avrà un accesso separato e vedrà solo i propri appuntamenti,
+clienti e servizi.
+</p>
+
+<label for="loginEmail">
+Email
+</label>
+
+<input
+id="loginEmail"
+type="email"
+placeholder="titolare@salone.it"
+>
+
+<label for="loginPassword">
+Password
+</label>
+
+<input
+id="loginPassword"
+type="password"
+placeholder="••••••••"
+>
+
+<button
+class="primary"
+id="loginBtn"
+>
+Accedi al gestionale
+</button>
+
+<div
+id="loginMsg"
+class="mini"
+style="text-align:center;margin-top:14px"
+></div>
+
+</div>
+
+</section>
+
+<!-- CLIENT VIEW -->
+
+<section id="clientView">
+
+<div class="hero">
+
+<div>
+
+<div class="eyebrow">
+Hair studio · Milano
+</div>
+
+<h1>
+Il tuo momento,<br>
+<em>senza attese.</em>
+</h1>
+
+<p>
+Prenota online il tuo appuntamento in pochi secondi.
+Scegli il servizio, l'orario e lascia il resto a noi.
+</p>
+
+</div>
+
+<div class="hero-card">
+
+<div class="eyebrow">
+Oggi
+</div>
+
+<strong>
+09:00 — 19:00
+</strong>
+
+<div class="mini">
+Martedì · ultimo appuntamento 18:00
+</div>
+
+</div>
+
+</div>
+
+<div class="section-title">
+
+<h2>
+Scegli il servizio
+</h2>
+
+<span class="mini">
+Passo 1 di 2
+</span>
+
+</div>
+
+<div
+class="services"
+id="services"
+></div>
+
+<div class="booking">
+
+<div class="panel">
+
+<div class="steps">
+
+<div class="step done"></div>
+
+<div
+class="step"
+id="step2"
+></div>
+
+</div>
+
+<div class="eyebrow">
+Disponibilità
+</div>
+
+<h2
+style="font:500 28px Georgia,serif;margin:8px 0"
+>
+Quando vuoi venire?
+</h2>
+
+<label for="date">
+Data
+</label>
+
+<input
+id="date"
+type="date"
+>
+
+<label for="stylist">
+Professionista
+</label>
+
+<select id="stylist"></select>
+
+<label>
+Orari disponibili
+</label>
+
+<div
+class="times"
+id="times"
+></div>
+
+<label for="name">
+Nome
+</label>
+
+<input
+id="name"
+placeholder="Il tuo nome"
+>
+
+<label for="phone">
+Telefono
+</label>
+
+<input
+id="phone"
+placeholder="333 123 4567"
+inputmode="tel"
+>
+
+<button
+class="primary"
+id="confirm"
+>
+Conferma prenotazione
+</button>
+
+</div>
+
+<aside class="panel summary">
+
+<div class="eyebrow">
+Riepilogo
+</div>
+
+<h3>
+Il tuo appuntamento
+</h3>
+
+<div class="sumrow">
+<span>Servizio</span>
+<span id="sumService">—</span>
+</div>
+
+<div class="sumrow">
+<span>Durata</span>
+<span id="sumDuration">—</span>
+</div>
+
+<div class="sumrow">
+<span>Prezzo</span>
+<span id="sumPrice">—</span>
+</div>
+
+<div class="sumrow">
+<span>Data</span>
+<span id="sumDate">—</span>
+</div>
+
+<div class="sumrow">
+<span>Orario</span>
+<span id="sumTime">—</span>
+</div>
+
+</aside>
+
+</div>
+
+</section>
+
+<!-- DASHBOARD -->
+
+<section
+id="dashboard"
+class="dashboard"
+>
+
+<div class="section-title">
+
+<div>
+
+<div class="eyebrow">
+Gestionale
+</div>
+
+<h2 id="dashTitle">
+Agenda del salone
+</h2>
+
+</div>
+
+<div>
+
+<button
+class="ghost"
+id="logoutBtn"
+>
+Esci
+</button>
+
+<button
+class="ghost"
+id="backClient"
+>
+← Prenotazione cliente
+</button>
+
+</div>
+
+</div>
+
+<div class="dashgrid">
+
+<aside class="sidebar">
+
+<button
+class="sidebtn active"
+data-view="agenda"
+>
+📅 Agenda
+</button>
+
+<button
+class="sidebtn"
+data-view="servicesAdmin"
+>
+✂ Servizi
+</button>
+
+<button
+class="sidebtn"
+data-view="clients"
+>
+👥 Clienti
+</button>
+
+<button
+class="sidebtn"
+data-view="settings"
+>
+⚙ Impostazioni
+</button>
+
+<div
+style="margin-top:25px;border-top:1px solid var(--line);padding-top:18px"
+>
+
+<div class="mini">
+Incasso previsto
+</div>
+
+<div
+style="font-size:27px;font-weight:800;margin-top:5px"
+id="revenue"
+>
+€ 0
+</div>
+
+<div
+class="mini"
+id="countInfo"
+></div>
+
+</div>
+
+</aside>
+
+<div id="adminContent"></div>
+
+</div>
+
+</section>
+
+</main>
+
+<div
+class="toast"
+id="toast"
+></div>
+
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-const SUPABASE_URL='https://npypzpcnknizululwxri.supabase.co';
-const SUPABASE_KEY='sb_publishable_UPbWsd8Xv_Xa2rZcNrebNw_GE0UmdS7';
-const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const PUBLIC_SALON_ID='dab13b9a-a5fb-4809-a9ef-26712c5aaa3e';
-const defaultServices=[{name:'Taglio',desc:'Taglio personalizzato + styling',price:28,dur:'45 min',icon:'✂️'},{name:'Piega',desc:'Lavaggio + piega professionale',price:22,dur:'30 min',icon:'✨'},{name:'Colore',desc:'Colore completo + finish',price:55,dur:'90 min',icon:'🎨'},{name:'Taglio + Piega',desc:'Il servizio completo',price:45,dur:'75 min',icon:'💇'}];
-const slots=['09:00','09:45','10:30','11:15','12:00','14:00','14:45','15:30','16:15','17:00','17:45','18:30'];
-const $=id=>document.getElementById(id);
-function today(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
-let services=[...defaultServices],appointments=[],currentProfile=null,selected=services[0],selectedTime='';
-function toast(msg){const e=$('toast');if(!e)return;e.textContent=msg;e.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>e.style.display='none',3000)}
-function renderServices(){if(!$('services'))return;$('services').innerHTML=services.map((s,i)=>`<div class="service ${i===0?'selected':''}" data-i="${i}"><div class="icon">${s.icon||'✂️'}</div><h3>${s.name}</h3><p>${s.desc||'Servizio del salone'}</p><div class="price">€ ${s.price}</div></div>`).join('');document.querySelectorAll('.service').forEach(el=>el.onclick=()=>{selected=services[Number(el.dataset.i)];document.querySelectorAll('.service').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedTime='';updateSummary();renderTimes()})}
-function renderTimes(){const date=$('date').value,stylist=$('stylist').value;const taken=appointments.filter(a=>a.date===date&&a.stylist===stylist&&a.status!=='cancelled').map(a=>a.time);$('times').innerHTML=slots.map(t=>{const occupied=taken.includes(t);return `<button class="time" ${occupied?'disabled':''} data-time="${t}">${t}${occupied?' · occupato':''}</button>`}).join('');document.querySelectorAll('.time').forEach(button=>button.onclick=()=>{if(button.disabled)return;document.querySelectorAll('.time').forEach(x=>x.classList.remove('selected'));button.classList.add('selected');selectedTime=button.dataset.time;updateSummary()})}
-function updateSummary(){$('sumService').textContent=selected?.name||'—';$('sumDuration').textContent=selected?.dur||'—';$('sumPrice').textContent=selected?'€ '+selected.price:'—';$('sumDate').textContent=$('date').value?new Date($('date').value+'T12:00').toLocaleDateString('it-IT'):'—';$('sumTime').textContent=selectedTime||'—';$('step2').classList.toggle('done',!!selectedTime)}
-$('date').value=today();$('date').min=today();$('date').onchange=()=>{selectedTime='';renderTimes();updateSummary()};$('stylist').onchange=()=>{selectedTime='';renderTimes();updateSummary()};renderServices();renderTimes();updateSummary();
-async function confirmBooking(){const btn=$('confirm'),name=$('name').value.trim(),phone=$('phone').value.trim();if(!name||!phone||!selectedTime){toast('Completa nome, telefono e scegli un orario.');return}btn.disabled=true;btn.textContent='Prenotazione in corso…';try{const staffName=$('stylist').value.split(' · ')[0];const {data,error}=await supabaseClient.rpc('create_public_appointment',{p_salon_id:PUBLIC_SALON_ID,p_customer_name:name,p_customer_phone:phone,p_staff_name:staffName,p_service_name:selected.name,p_date:$('date').value,p_start_time:selectedTime+':00'});if(error)throw error;console.log('Prenotazione creata:',data);toast('Prenotazione confermata per '+name+'.');$('name').value='';$('phone').value='';selectedTime='';await loadData(false);renderTimes();updateSummary()}catch(err){console.error('Errore prenotazione:',err);let message=err?.message||'Errore durante la prenotazione.';if(message.toLowerCase().includes('orario occupato'))message='Questo orario è appena stato occupato. Scegline un altro.';toast(message)}finally{btn.disabled=false;btn.textContent='Conferma prenotazione'}}
-$('confirm').onclick=confirmBooking;
-function romeDateKey(date){const p=new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);return `${p.find(x=>x.type==='year').value}-${p.find(x=>x.type==='month').value}-${p.find(x=>x.type==='day').value}`}
-async function cancelAppointment(id){if(!id)return;try{const {error}=await supabaseClient.from('appointments').update({status:'cancelled'}).eq('id',id);if(error)throw error;toast('Appuntamento annullato');await loadData(false);renderAdmin('agenda')}catch(error){console.error(error);toast('Impossibile annullare l’appuntamento.')}}
-function renderAdmin(view='agenda'){
-const content=$('adminContent');document.querySelectorAll('.sidebtn').forEach(b=>b.classList.toggle('active',b.dataset.view===view));const total=appointments.filter(a=>a.status!=='cancelled').reduce((n,a)=>n+Number(a.price||0),0);$('revenue').textContent='€ '+total;$('countInfo').textContent=appointments.filter(a=>a.status!=='cancelled').length+' appuntamenti confermati';
-if(view==='agenda'){
-$('dashTitle').textContent='Agenda del salone';if(!window.agendaMonth){window.agendaMonth=new Date();window.agendaMonth.setDate(1)}const monthDate=new Date(window.agendaMonth),year=monthDate.getFullYear(),month=monthDate.getMonth();const monthName=new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(monthDate);const firstDay=new Date(year,month,1),lastDay=new Date(year,month+1,0);let startOffset=firstDay.getDay()-1;if(startOffset<0)startOffset=6;const totalDays=lastDay.getDate(),previousMonthDays=new Date(year,month,0).getDate(),totalCells=Math.ceil((startOffset+totalDays)/7)*7,todayKey=romeDateKey(new Date());const weekdays=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];const monthAppointments=appointments.filter(a=>{if(!a.date)return false;const p=a.date.split('-');return Number(p[0])===year&&Number(p[1])===month+1&&a.status!=='cancelled'});
-content.innerHTML=`<div class="agenda-toolbar"><div class="agenda-toolbar-left"><button class="agenda-nav" id="prevMonth">‹</button><div class="month-title">${monthName}</div><button class="agenda-nav" id="nextMonth">›</button></div><div class="agenda-toolbar-right"><button class="agenda-today" id="todayMonth">Oggi</button></div></div><div class="agenda-summary"><strong>${monthAppointments.length}</strong> ${monthAppointments.length===1?'appuntamento':'appuntamenti'} nel mese</div><div class="calendar">${weekdays.map(d=>`<div class="calendar-weekday">${d}</div>`).join('')}${Array.from({length:totalCells},(_,index)=>{let dayNumber=index-startOffset+1,cellYear=year,cellMonth=month;if(dayNumber<1){dayNumber=previousMonthDays+dayNumber;cellMonth=month-1;if(cellMonth<0){cellMonth=11;cellYear=year-1}}else if(dayNumber>totalDays){dayNumber-=totalDays;cellMonth=month+1;if(cellMonth>11){cellMonth=0;cellYear=year+1}}const dateKey=`${cellYear}-${String(cellMonth+1).padStart(2,'0')}-${String(dayNumber).padStart(2,'0')}`,isCurrentMonth=cellYear===year&&cellMonth===month,isToday=dateKey===todayKey,list=appointments.filter(a=>a.date===dateKey&&a.status!=='cancelled').sort((a,b)=>a.time.localeCompare(b.time));return `<div class="day ${isCurrentMonth?'':'other-month'} ${isToday?'today':''}"><div class="dayhead"><span class="day-number">${dayNumber}</span>${list.length?`<span class="day-count">${list.length} app.</span>`:''}</div>${list.length?list.map(a=>`<div class="appt" data-appointment="${a.id}" title="Clicca per gestire l'appuntamento"><b>${a.time} · ${a.name}</b><div>${a.service}</div><span class="mini">${a.stylist||'Professionista'}</span></div>`).join(''):'<div class="mini">Nessun appuntamento</div>'}</div>`}).join('')}</div>`;
-$('prevMonth').onclick=()=>{window.agendaMonth=new Date(year,month-1,1);renderAdmin('agenda')};$('nextMonth').onclick=()=>{window.agendaMonth=new Date(year,month+1,1);renderAdmin('agenda')};$('todayMonth').onclick=()=>{const n=new Date();window.agendaMonth=new Date(n.getFullYear(),n.getMonth(),1);renderAdmin('agenda')};document.querySelectorAll('[data-appointment]').forEach(card=>card.onclick=()=>{const a=appointments.find(x=>x.id===card.dataset.appointment);if(!a)return;const message=`Cliente: ${a.name}\nTelefono: ${a.phone||'—'}\nServizio: ${a.service}\nData: ${a.date}\nOrario: ${a.time}\nProfessionista: ${a.stylist||'—'}\nStato: ${a.status}\n\nVuoi annullare questo appuntamento?`;if(a.status==='confirmed'&&confirm(message))cancelAppointment(a.id)});
+
+/* =========================
+   SUPABASE
+========================= */
+
+const SUPABASE_URL =
+'https://npypzpcnknizululwxri.supabase.co';
+
+const SUPABASE_KEY =
+'sb_publishable_UPbWsd8Xv_Xa2rZcNrebNw_GE0UmdS7';
+
+const supabaseClient =
+supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+const PUBLIC_SALON_ID =
+'dab13b9a-a5fb-4809-a9ef-26712c5aaa3e';
+
+
+/* =========================
+   DATI DEFAULT
+========================= */
+
+const defaultServices = [
+
+{
+name:'Taglio',
+desc:'Taglio personalizzato + styling',
+price:28,
+dur:'45 min',
+icon:'✂️'
+},
+
+{
+name:'Piega',
+desc:'Lavaggio + piega professionale',
+price:22,
+dur:'30 min',
+icon:'✨'
+},
+
+{
+name:'Colore',
+desc:'Colore completo + finish',
+price:55,
+dur:'90 min',
+icon:'🎨'
+},
+
+{
+name:'Taglio + Piega',
+desc:'Il servizio completo',
+price:45,
+dur:'75 min',
+icon:'💇'
+}
+
+];
+
+const slots = [
+
+'09:00',
+'09:45',
+'10:30',
+'11:15',
+'12:00',
+'14:00',
+'14:45',
+'15:30',
+'16:15',
+'17:00',
+'17:45',
+'18:30'
+
+];
+
+const $ =
+id => document.getElementById(id);
+
+const today =
+() => new Date().toISOString().slice(0,10);
+
+let services =
+defaultServices;
+
+let appointments = [];
+
+let currentProfile =
+null;
+
+let selected =
+services[0];
+
+let selectedTime =
+'';
+
+
+/* =========================
+   TOAST
+========================= */
+
+function toast(msg){
+
+const element =
+$('toast');
+
+if(!element)
 return;
+
+element.textContent =
+msg;
+
+element.style.display =
+'block';
+
+clearTimeout(
+window.toastTimer
+);
+
+window.toastTimer =
+setTimeout(()=>{
+
+element.style.display =
+'none';
+
+},3000);
+
 }
-if(view==='servicesAdmin'){$('dashTitle').textContent='Servizi e prezzi';content.innerHTML=`<div class="panel"><div style="display:grid;gap:10px">${services.map((s,i)=>`<div style="display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid var(--line)"><span style="font-size:22px">${s.icon||'✂️'}</span><div style="flex:1"><b>${s.name}</b><div class="mini">${s.dur} · € ${s.price}</div></div><button class="ghost" data-remove-service="${i}">Elimina</button></div>`).join('')}</div><button class="primary" id="addService">+ Aggiungi servizio</button></div>`;document.querySelectorAll('[data-remove-service]').forEach(button=>button.onclick=async()=>{const service=services[Number(button.dataset.removeService)];if(!service?.id){toast('Questo servizio non può essere modificato.');return}const {error}=await supabaseClient.from('services').update({active:false}).eq('id',service.id);if(error){console.error(error);toast('Impossibile eliminare il servizio.');return}toast('Servizio eliminato');await loadData(false);renderAdmin('servicesAdmin')});$('addService').onclick=async()=>{const name=prompt('Nome del servizio');if(!name)return;const price=Number(prompt('Prezzo in euro','30'));if(!price)return;const duration=Number(prompt('Durata in minuti','60'));if(!duration)return;if(!currentProfile?.salon_id){toast('Salone non configurato.');return}const {error}=await supabaseClient.from('services').insert({salon_id:currentProfile.salon_id,name:name.trim(),description:'Servizio personalizzato',price,duration_minutes:duration,active:true});if(error){console.error(error);toast('Impossibile creare il servizio.');return}toast('Servizio aggiunto');await loadData(false);renderAdmin('servicesAdmin')};return}
-if(view==='clients'){$('dashTitle').textContent='Clienti';const clients=[...new Map(appointments.filter(a=>a.status!=='cancelled').map(a=>[a.phone,a])).values()];content.innerHTML=`<div class="panel"><div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:10px">Cliente</th><th style="text-align:left;padding:10px">Telefono</th><th style="text-align:left;padding:10px">Ultimo servizio</th></tr>${clients.map(c=>`<tr><td style="padding:10px;border-top:1px solid var(--line)">${c.name}</td><td style="padding:10px;border-top:1px solid var(--line)">${c.phone}</td><td style="padding:10px;border-top:1px solid var(--line)">${c.service}</td></tr>`).join('')}</table></div></div>`;return}
-if(view==='settings'){$('dashTitle').textContent='Impostazioni';content.innerHTML=`<div class="panel"><h3 style="font:500 23px Georgia,serif">Configurazione salone</h3><label>Nome salone</label><input id="shopName" value="Studio Lume"><label>Orario apertura</label><input value="09:00 — 19:00"><label>Durata slot standard</label><select><option>15 minuti</option><option selected>30 minuti</option><option>45 minuti</option></select><button class="primary" id="saveSettings">Salva impostazioni</button></div>`;$('saveSettings').onclick=()=>toast('Impostazioni salvate.');return}
+
+
+/* =========================
+   SERVIZI CLIENTE
+========================= */
+
+function renderServices(){
+
+$('services').innerHTML =
+services.map((s,i)=>`
+
+<div
+class="service ${i===0?'selected':''}"
+data-i="${i}"
+>
+
+<div class="icon">
+${s.icon||'✂️'}
+</div>
+
+<h3>
+${s.name}
+</h3>
+
+<p>
+${s.desc||'Servizio del salone'}
+</p>
+
+<div class="price">
+€ ${s.price}
+</div>
+
+</div>
+
+`).join('');
+
+document
+.querySelectorAll('.service')
+.forEach(el=>{
+
+el.onclick=()=>{
+
+selected =
+services[
+Number(el.dataset.i)
+];
+
+document
+.querySelectorAll('.service')
+.forEach(x=>
+x.classList.remove('selected')
+);
+
+el.classList.add('selected');
+
+selectedTime =
+'';
+
+updateSummary();
+
+renderTimes();
+
+};
+
+});
+
 }
-async function loadData(showErrors=true){const userResult=await supabaseClient.auth.getUser();const user=userResult?.data?.user;if(!user)return;const profile=await supabaseClient.from('profiles').select('salon_id').eq('id',user.id).maybeSingle();if(profile.error||!profile.data){if(showErrors)toast('Profilo salone non configurato.');return}currentProfile=profile.data;const salonId=currentProfile.salon_id;const [sr,ar,str]=await Promise.all([supabaseClient.from('services').select('*').eq('salon_id',salonId).eq('active',true).order('name'),supabaseClient.from('appointments').select('*,customers(name,phone),staff(name),services(name,price,duration_minutes)').eq('salon_id',salonId).order('starts_at'),supabaseClient.from('staff').select('*').eq('salon_id',salonId).eq('active',true).order('name')]);if(sr.error||ar.error||str.error){console.error(sr.error,ar.error,str.error);if(showErrors)toast('Errore nel caricamento dei dati.');return}services=sr.data.map(x=>({id:x.id,name:x.name,desc:x.description||'Servizio del salone',price:Number(x.price),dur:(x.duration_minutes||60)+' min',icon:'✂️'}));appointments=ar.data.map(x=>{const start=new Date(x.starts_at),parts=new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(start).split('/');return{id:x.id,date:`${parts[2]}-${parts[1]}-${parts[0]}`,time:new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hour12:false}).format(start),name:x.customers?.name||'Cliente',phone:x.customers?.phone||'',service:x.services?.name||'Servizio',price:Number(x.services?.price||0),stylist:x.staff?.name||'',status:x.status,starts_at:x.starts_at,ends_at:x.ends_at}});$('stylist').innerHTML=str.data.map(x=>`<option value="${x.name}">${x.name} · ${x.role||'Professionista'}</option>`).join('');selected=services[0]||defaultServices[0];renderServices();renderTimes();updateSummary()}
-function showLogin(){$('clientView').style.display='none';$('dashboard').style.display='none';$('loginView').style.display='block';$('clientTab').classList.remove('active');$('adminTab').classList.add('active')}
-function showAdmin(){$('loginView').style.display='none';$('clientView').style.display='none';$('dashboard').style.display='block';$('clientTab').classList.remove('active');$('adminTab').classList.add('active');renderAdmin('agenda')}
-function showClient(){$('loginView').style.display='none';$('dashboard').style.display='none';$('clientView').style.display='block';$('adminTab').classList.remove('active');$('clientTab').classList.add('active');renderTimes()}
-document.querySelectorAll('.sidebtn').forEach(button=>button.onclick=()=>renderAdmin(button.dataset.view));
-$('loginBtn').onclick=async()=>{const email=$('loginEmail').value.trim(),password=$('loginPassword').value;$('loginMsg').textContent='Accesso in corso…';const {error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){console.error(error);$('loginMsg').textContent='Email o password non corrette.';return}$('loginMsg').textContent='';await loadData();showAdmin()};
-$('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();currentProfile=null;appointments=[];showClient()};
-$('adminTab').onclick=async()=>{const {data}=await supabaseClient.auth.getSession();if(data.session){await loadData();showAdmin()}else showLogin()};$('clientTab').onclick=$('backClient').onclick=showClient;
-supabaseClient.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){currentProfile=null;appointments=[];showClient()}});
-(async function initAuth(){const {data}=await supabaseClient.auth.getSession();if(data.session){await loadData();showAdmin()}else showClient()})();
+
+
+/* =========================
+   ORARI
+========================= */
+
+function renderTimes(){
+
+const date =
+$('date').value;
+
+const stylist =
+$('stylist').value;
+
+const taken =
+appointments
+.filter(a=>
+a.date===date &&
+a.stylist===stylist &&
+a.status!=='cancelled'
+)
+.map(a=>a.time);
+
+$('times').innerHTML =
+slots.map(t=>{
+
+const occupied =
+taken.includes(t);
+
+return `
+
+<button
+class="time"
+${occupied?'disabled':''}
+data-time="${t}"
+>
+${t}${occupied?' · occupato':''}
+</button>
+
+`;
+
+}).join('');
+
+document
+.querySelectorAll('.time')
+.forEach(button=>{
+
+button.onclick=()=>{
+
+if(button.disabled)
+return;
+
+document
+.querySelectorAll('.time')
+.forEach(x=>
+x.classList.remove('selected')
+);
+
+button.classList.add('selected');
+
+selectedTime =
+button.dataset.time;
+
+updateSummary();
+
+};
+
+});
+
+}
+
+
+/* =========================
+   RIEPILOGO
+========================= */
+
+function updateSummary(){
+
+$('sumService').textContent =
+selected?.name||'—';
+
+$('sumDuration').textContent =
+selected?.dur||'—';
+
+$('sumPrice').textContent =
+selected
+?
+'€ '+selected.price
+:
+'—';
+
+$('sumDate').textContent =
+$('date').value
+?
+new Date(
+$('date').value+'T12:00'
+).toLocaleDateString('it-IT')
+:
+'—';
+
+$('sumTime').textContent =
+selectedTime||'—';
+
+$('step2').classList.toggle(
+'done',
+!!selectedTime
+);
+
+}
+
+
+/* =========================
+   INIZIALIZZAZIONE
+========================= */
+
+$('date').value =
+today();
+
+$('date').min =
+today();
+
+$('date').onchange=()=>{
+
+selectedTime =
+'';
+
+renderTimes();
+
+updateSummary();
+
+};
+
+$('stylist').onchange=()=>{
+
+selectedTime =
+'';
+
+renderTimes();
+
+updateSummary();
+
+};
+
+renderServices();
+
+renderTimes();
+
+updateSummary();
+
+
+/* =========================
+   PRENOTAZIONE PUBBLICA
+========================= */
+
+async function confirmBooking(){
+
+const btn =
+$('confirm');
+
+const name =
+$('name').value.trim();
+
+const phone =
+$('phone').value.trim();
+
+if(
+!name ||
+!phone ||
+!selectedTime
+){
+
+toast(
+'Completa nome, telefono e scegli un orario.'
+);
+
+return;
+
+}
+
+btn.disabled =
+true;
+
+btn.textContent =
+'Prenotazione in corso…';
+
+try{
+
+const staffName =
+$('stylist')
+.value
+.split(' · ')[0];
+
+const {
+data,
+error
+} =
+await supabaseClient.rpc(
+'create_public_appointment',
+{
+
+p_salon_id:
+PUBLIC_SALON_ID,
+
+p_customer_name:
+name,
+
+p_customer_phone:
+phone,
+
+p_staff_name:
+staffName,
+
+p_service_name:
+selected.name,
+
+p_date:
+$('date').value,
+
+p_start_time:
+selectedTime+':00'
+
+}
+);
+
+if(error)
+throw error;
+
+console.log(
+'Prenotazione creata:',
+data
+);
+
+toast(
+'Prenotazione confermata per '+name+'.'
+);
+
+$('name').value =
+'';
+
+$('phone').value =
+'';
+
+selectedTime =
+'';
+
+renderTimes();
+
+updateSummary();
+
+}catch(err){
+
+console.error(
+'Errore prenotazione:',
+err
+);
+
+let message =
+err?.message ||
+'Errore durante la prenotazione.';
+
+if(
+message
+.toLowerCase()
+.includes('orario occupato')
+){
+
+message =
+'Questo orario è appena stato occupato. Scegline un altro.';
+
+}
+
+toast(message);
+
+}finally{
+
+btn.disabled =
+false;
+
+btn.textContent =
+'Conferma prenotazione';
+
+}
+
+}
+
+$('confirm').onclick =
+confirmBooking;
+
+
+/* =========================
+   AGENDA
+========================= */
+
+function romeDateKey(date){
+
+const parts =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}
+).formatToParts(date);
+
+const year =
+parts.find(p=>p.type==='year').value;
+
+const month =
+parts.find(p=>p.type==='month').value;
+
+const day =
+parts.find(p=>p.type==='day').value;
+
+return `${year}-${month}-${day}`;
+
+}
+
+
+/* =========================
+   ANNULLAMENTO
+========================= */
+
+async function cancelAppointment(id){
+
+if(!id)
+return;
+
+try{
+
+const {
+error
+} =
+await supabaseClient
+.from('appointments')
+.update({
+status:'cancelled'
+})
+.eq(
+'id',
+id
+);
+
+if(error)
+throw error;
+
+toast(
+'Appuntamento annullato'
+);
+
+await loadData(false);
+
+renderAdmin(
+'agenda'
+);
+
+}catch(error){
+
+console.error(error);
+
+toast(
+'Impossibile annullare l’appuntamento.'
+);
+
+}
+
+}
+
+
+/* =========================
+   RENDER ADMIN
+========================= */
+
+function renderAdmin(
+view='agenda'
+){
+
+const content =
+$('adminContent');
+
+document
+.querySelectorAll('.sidebtn')
+.forEach(button=>
+button.classList.toggle(
+'active',
+button.dataset.view===view
+)
+);
+
+const total =
+appointments
+.filter(a=>a.status!=='cancelled')
+.reduce(
+(n,a)=>n+a.price,
+0
+);
+
+$('revenue').textContent =
+'€ '+total;
+
+$('countInfo').textContent =
+appointments.filter(
+a=>a.status!=='cancelled'
+).length+
+' appuntamenti salvati';
+
+
+/* =========================
+   AGENDA MENSILE
+========================= */
+
+if(view==='agenda'){
+
+$('dashTitle').textContent =
+'Agenda del salone';
+
+if(!window.agendaMonth){
+
+window.agendaMonth =
+new Date();
+
+window.agendaMonth.setDate(1);
+
+}
+
+const monthDate =
+new Date(
+window.agendaMonth
+);
+
+const year =
+monthDate.getFullYear();
+
+const month =
+monthDate.getMonth();
+
+const monthName =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+month:'long',
+year:'numeric'
+}
+).format(monthDate);
+
+const firstDay =
+new Date(
+year,
+month,
+1
+);
+
+const lastDay =
+new Date(
+year,
+month+1,
+0
+);
+
+let startOffset =
+firstDay.getDay()-1;
+
+if(startOffset<0)
+startOffset=6;
+
+const totalDays =
+lastDay.getDate();
+
+const previousMonthDays =
+new Date(
+year,
+month,
+0
+).getDate();
+
+const totalCells =
+Math.ceil(
+(startOffset+totalDays)/7
+)*7;
+
+const todayKey =
+romeDateKey(
+new Date()
+);
+
+const weekdays = [
+'Lun',
+'Mar',
+'Mer',
+'Gio',
+'Ven',
+'Sab',
+'Dom'
+];
+
+const monthAppointments =
+appointments.filter(a=>{
+
+if(!a.date)
+return false;
+
+const parts =
+a.date.split('-');
+
+return(
+Number(parts[0])===year &&
+Number(parts[1])===month+1 &&
+a.status!=='cancelled'
+);
+
+});
+
+content.innerHTML = `
+
+<div class="agenda-toolbar">
+
+<div class="agenda-toolbar-left">
+
+<button
+class="agenda-nav"
+id="prevMonth"
+title="Mese precedente"
+>
+‹
+</button>
+
+<div class="month-title">
+${monthName}
+</div>
+
+<button
+class="agenda-nav"
+id="nextMonth"
+title="Mese successivo"
+>
+›
+</button>
+
+</div>
+
+<div class="agenda-toolbar-right">
+
+<button
+class="agenda-today"
+id="todayMonth"
+>
+Oggi
+</button>
+
+</div>
+
+</div>
+
+<div class="agenda-summary">
+
+<strong>
+${monthAppointments.length}
+</strong>
+
+${monthAppointments.length===1
+?'appuntamento'
+:'appuntamenti'}
+
+nel mese
+
+</div>
+
+<div class="calendar">
+
+${weekdays.map(day=>`
+
+<div class="calendar-weekday">
+${day}
+</div>
+
+`).join('')}
+
+${Array.from(
+{
+length:totalCells
+},
+(_,index)=>{
+
+let dayNumber =
+index-startOffset+1;
+
+let cellYear =
+year;
+
+let cellMonth =
+month;
+
+if(dayNumber<1){
+
+dayNumber =
+previousMonthDays+dayNumber;
+
+cellMonth =
+month-1;
+
+if(cellMonth<0){
+
+cellMonth=11;
+cellYear=year-1;
+
+}
+
+}
+
+else if(dayNumber>totalDays){
+
+dayNumber =
+dayNumber-totalDays;
+
+cellMonth =
+month+1;
+
+if(cellMonth>11){
+
+cellMonth=0;
+cellYear=year+1;
+
+}
+
+}
+
+const dateKey =
+`${cellYear}-${String(cellMonth+1).padStart(2,'0')}-${String(dayNumber).padStart(2,'0')}`;
+
+const isCurrentMonth =
+cellYear===year &&
+cellMonth===month;
+
+const isToday =
+dateKey===todayKey;
+
+const list =
+appointments
+.filter(a=>
+a.date===dateKey &&
+a.status!=='cancelled'
+)
+.sort(
+(a,b)=>
+a.time.localeCompare(b.time)
+);
+
+return `
+
+<div
+class="day
+${isCurrentMonth?'':'other-month'}
+${isToday?'today':''}"
+>
+
+<div class="dayhead">
+
+<span class="day-number">
+${dayNumber}
+</span>
+
+${
+list.length
+?
+`<span class="day-count">
+${list.length} app.
+</span>`
+:
+''
+}
+
+</div>
+
+${
+list.length
+
+?
+
+list.map(a=>`
+
+<div
+class="appt"
+data-appointment="${a.id}"
+title="Clicca per gestire l'appuntamento"
+>
+
+<b>
+${a.time} · ${a.name}
+</b>
+
+<div>
+${a.service}
+</div>
+
+<span class="mini">
+${a.stylist||'Professionista'}
+</span>
+
+</div>
+
+`).join('')
+
+:
+
+`<div class="mini">
+Nessun appuntamento
+</div>`
+
+}
+
+</div>
+
+`;
+
+}
+).join('')}
+
+</div>
+
+`;
+
+
+/* NAVIGAZIONE MESI */
+
+$('prevMonth').onclick =
+()=>{
+
+window.agendaMonth =
+new Date(
+year,
+month-1,
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+$('nextMonth').onclick =
+()=>{
+
+window.agendaMonth =
+new Date(
+year,
+month+1,
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+$('todayMonth').onclick =
+()=>{
+
+const now =
+new Date();
+
+window.agendaMonth =
+new Date(
+now.getFullYear(),
+now.getMonth(),
+1
+);
+
+renderAdmin(
+'agenda'
+);
+
+};
+
+
+/* DETTAGLI APPUNTAMENTO */
+
+document
+.querySelectorAll('[data-appointment]')
+.forEach(card=>{
+
+card.onclick =
+()=>{
+
+const appointment =
+appointments.find(
+a=>
+a.id===
+card.dataset.appointment
+);
+
+if(!appointment)
+return;
+
+const message =
+`Cliente: ${appointment.name}
+Telefono: ${appointment.phone||'—'}
+Servizio: ${appointment.service}
+Data: ${appointment.date}
+Orario: ${appointment.time}
+Professionista: ${appointment.stylist||'—'}
+Stato: ${appointment.status}
+
+Vuoi annullare questo appuntamento?`;
+
+if(
+appointment.status==='confirmed' &&
+confirm(message)
+){
+
+cancelAppointment(
+appointment.id
+);
+
+}
+
+};
+
+});
+
+return;
+
+}
+
+
+/* =========================
+   SERVIZI ADMIN
+========================= */
+
+if(view==='servicesAdmin'){
+
+$('dashTitle').textContent =
+'Servizi e prezzi';
+
+content.innerHTML = `
+
+<div class="panel">
+
+<div style="display:grid;gap:10px">
+
+${services.map((s,i)=>`
+
+<div
+style="
+display:flex;
+gap:12px;
+align-items:center;
+padding:14px;
+border-bottom:1px solid var(--line)
+"
+>
+
+<span style="font-size:22px">
+${s.icon||'✂️'}
+</span>
+
+<div style="flex:1">
+
+<b>
+${s.name}
+</b>
+
+<div class="mini">
+${s.dur} · € ${s.price}
+</div>
+
+</div>
+
+<button
+class="ghost"
+data-remove-service="${i}"
+>
+Elimina
+</button>
+
+</div>
+
+`).join('')}
+
+</div>
+
+<button
+class="primary"
+id="addService"
+>
++ Aggiungi servizio
+</button>
+
+</div>
+
+`;
+
+document
+.querySelectorAll('[data-remove-service]')
+.forEach(button=>{
+
+button.onclick =
+async()=>{
+
+const service =
+services[
+Number(
+button.dataset.removeService
+)
+];
+
+if(!service?.id){
+
+toast(
+'Questo servizio non può essere modificato.'
+);
+
+return;
+
+}
+
+const {
+error
+} =
+await supabaseClient
+.from('services')
+.update({
+active:false
+})
+.eq(
+'id',
+service.id
+);
+
+if(error){
+
+console.error(error);
+
+toast(
+'Impossibile eliminare il servizio.'
+);
+
+return;
+
+}
+
+toast(
+'Servizio eliminato'
+);
+
+await loadData(false);
+
+renderAdmin(
+'servicesAdmin'
+);
+
+};
+
+});
+
+$('addService').onclick =
+async()=>{
+
+const name =
+prompt(
+'Nome del servizio'
+);
+
+if(!name)
+return;
+
+const price =
+Number(
+prompt(
+'Prezzo in euro',
+'30'
+)
+);
+
+if(!price)
+return;
+
+const duration =
+Number(
+prompt(
+'Durata in minuti',
+'60'
+)
+);
+
+if(!duration)
+return;
+
+if(!currentProfile?.salon_id){
+
+toast(
+'Salone non configurato.'
+);
+
+return;
+
+}
+
+const {
+error
+} =
+await supabaseClient
+.from('services')
+.insert({
+
+salon_id:
+currentProfile.salon_id,
+
+name:
+name.trim(),
+
+description:
+'Servizio personalizzato',
+
+price:
+price,
+
+duration_minutes:
+duration,
+
+active:
+true
+
+});
+
+if(error){
+
+console.error(error);
+
+toast(
+'Impossibile creare il servizio.'
+);
+
+return;
+
+}
+
+toast(
+'Servizio aggiunto'
+);
+
+await loadData(false);
+
+renderAdmin(
+'servicesAdmin'
+);
+
+};
+
+return;
+
+}
+
+
+/* =========================
+   CLIENTI
+========================= */
+
+if(view==='clients'){
+
+$('dashTitle').textContent =
+'Clienti';
+
+const clients = [
+...new Map(
+appointments
+.filter(a=>a.status!=='cancelled')
+.map(a=>[a.phone,a])
+).values()
+];
+
+content.innerHTML = `
+
+<div class="panel">
+
+<div style="overflow:auto">
+
+<table
+style="width:100%;border-collapse:collapse"
+>
+
+<tr>
+
+<th style="text-align:left;padding:10px">
+Cliente
+</th>
+
+<th style="text-align:left;padding:10px">
+Telefono
+</th>
+
+<th style="text-align:left;padding:10px">
+Ultimo servizio
+</th>
+
+</tr>
+
+${clients.map(c=>`
+
+<tr>
+
+<td style="padding:10px;border-top:1px solid var(--line)">
+${c.name}
+</td>
+
+<td style="padding:10px;border-top:1px solid var(--line)">
+${c.phone}
+</td>
+
+<td style="padding:10px;border-top:1px solid var(--line)">
+${c.service}
+</td>
+
+</tr>
+
+`).join('')}
+
+</table>
+
+</div>
+
+</div>
+
+`;
+
+return;
+
+}
+
+
+/* =========================
+   IMPOSTAZIONI
+========================= */
+
+if(view==='settings'){
+
+$('dashTitle').textContent =
+'Impostazioni';
+
+content.innerHTML = `
+
+<div class="panel">
+
+<h3 style="font:500 23px Georgia,serif">
+Configurazione salone
+</h3>
+
+<label>
+Nome salone
+</label>
+
+<input
+id="shopName"
+value="Studio Lume"
+>
+
+<label>
+Orario apertura
+</label>
+
+<input
+value="09:00 — 19:00"
+>
+
+<label>
+Durata slot standard
+</label>
+
+<select>
+
+<option>
+15 minuti
+</option>
+
+<option selected>
+30 minuti
+</option>
+
+<option>
+45 minuti
+</option>
+
+</select>
+
+<button
+class="primary"
+id="saveSettings"
+>
+Salva impostazioni
+</button>
+
+</div>
+
+`;
+
+$('saveSettings').onclick =
+()=>{
+
+toast(
+'Impostazioni salvate.'
+);
+
+};
+
+return;
+
+}
+
+}
+
+
+/* =========================
+   CARICAMENTO DATI
+========================= */
+
+async function loadData(
+showErrors=true
+){
+
+const userResult =
+await supabaseClient
+.auth
+.getUser();
+
+const user =
+userResult?.data?.user;
+
+if(!user)
+return;
+
+const profile =
+await supabaseClient
+.from('profiles')
+.select('salon_id')
+.eq(
+'id',
+user.id
+)
+.maybeSingle();
+
+if(
+profile.error ||
+!profile.data
+){
+
+if(showErrors){
+
+toast(
+'Profilo salone non configurato.'
+);
+
+}
+
+return;
+
+}
+
+currentProfile =
+profile.data;
+
+const salonId =
+currentProfile.salon_id;
+
+const [
+servicesResult,
+appointmentsResult,
+staffResult
+] =
+await Promise.all([
+
+supabaseClient
+.from('services')
+.select('*')
+.eq(
+'salon_id',
+salonId
+)
+.eq(
+'active',
+true
+)
+.order('name'),
+
+supabaseClient
+.from('appointments')
+.select(`
+*,
+customers(name,phone),
+staff(name),
+services(name,price,duration_minutes)
+`)
+.eq(
+'salon_id',
+salonId
+)
+.order(
+'starts_at'
+),
+
+supabaseClient
+.from('staff')
+.select('*')
+.eq(
+'salon_id',
+salonId
+)
+.eq(
+'active',
+true
+)
+.order('name')
+
+]);
+
+if(
+servicesResult.error ||
+appointmentsResult.error ||
+staffResult.error
+){
+
+console.error(
+servicesResult.error,
+appointmentsResult.error,
+staffResult.error
+);
+
+if(showErrors){
+
+toast(
+'Errore nel caricamento dei dati.'
+);
+
+}
+
+return;
+
+}
+
+
+/* SERVIZI */
+
+services =
+servicesResult.data.map(x=>({
+
+id:
+x.id,
+
+name:
+x.name,
+
+desc:
+x.description ||
+'Servizio del salone',
+
+price:
+Number(x.price),
+
+dur:
+(x.duration_minutes||60)+
+' min',
+
+icon:
+'✂️'
+
+}));
+
+
+/* APPUNTAMENTI */
+
+appointments =
+appointmentsResult.data.map(x=>{
+
+const start =
+new Date(
+x.starts_at
+);
+
+const parts =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}
+)
+.format(start)
+.split('/');
+
+const date =
+`${parts[2]}-${parts[1]}-${parts[0]}`;
+
+const time =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+hour:'2-digit',
+minute:'2-digit',
+hour12:false
+}
+)
+.format(start);
+
+return {
+
+id:
+x.id,
+
+date:
+date,
+
+time:
+time,
+
+name:
+x.customers?.name ||
+'Cliente',
+
+phone:
+x.customers?.phone ||
+'',
+
+service:
+x.services?.name ||
+'Servizio',
+
+price:
+Number(
+x.services?.price ||
+0
+),
+
+stylist:
+x.staff?.name ||
+'',
+
+status:
+x.status,
+
+starts_at:
+x.starts_at,
+
+ends_at:
+x.ends_at
+
+};
+
+});
+
+
+/* PROFESSIONISTI */
+
+$('stylist').innerHTML =
+staffResult.data
+.map(x=>`
+
+<option value="${x.name}">
+${x.name} · ${x.role||'Professionista'}
+</option>
+
+`)
+.join('');
+
+selected =
+services[0] ||
+defaultServices[0];
+
+renderServices();
+
+renderTimes();
+
+updateSummary();
+
+}
+
+
+/* =========================
+   MENU SIDEBAR
+========================= */
+
+document
+.querySelectorAll('.sidebtn')
+.forEach(button=>{
+
+button.onclick =
+()=>{
+
+renderAdmin(
+button.dataset.view
+);
+
+};
+
+});
+
+
+/* =========================
+   CAMBIO VISTA
+========================= */
+
+function showLogin(){
+
+$('clientView').style.display =
+'none';
+
+$('dashboard').style.display =
+'none';
+
+$('loginView').style.display =
+'block';
+
+$('clientTab')
+.classList.remove('active');
+
+$('adminTab')
+.classList.add('active');
+
+}
+
+function showAdmin(){
+
+$('loginView').style.display =
+'none';
+
+$('clientView').style.display =
+'none';
+
+$('dashboard').style.display =
+'block';
+
+$('clientTab')
+.classList.remove('active');
+
+$('adminTab')
+.classList.add('active');
+
+renderAdmin(
+'agenda'
+);
+
+}
+
+function showClient(){
+
+$('loginView').style.display =
+'none';
+
+$('dashboard').style.display =
+'none';
+
+$('clientView').style.display =
+'block';
+
+$('adminTab')
+.classList.remove('active');
+
+$('clientTab')
+.classList.add('active');
+
+renderTimes();
+
+}
+
+
+/* =========================
+   LOGIN
+========================= */
+
+$('loginBtn').onclick =
+async()=>{
+
+const email =
+$('loginEmail')
+.value
+.trim();
+
+const password =
+$('loginPassword')
+.value;
+
+$('loginMsg')
+.textContent =
+'Accesso in corso…';
+
+const {
+error
+} =
+await supabaseClient
+.auth
+.signInWithPassword({
+
+email,
+password
+
+});
+
+if(error){
+
+console.error(error);
+
+$('loginMsg')
+.textContent =
+'Email o password non corrette.';
+
+return;
+
+}
+
+$('loginMsg')
+.textContent =
+'';
+
+await loadData();
+
+showAdmin();
+
+};
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+$('logoutBtn').onclick =
+async()=>{
+
+await supabaseClient
+.auth
+.signOut();
+
+currentProfile =
+null;
+
+appointments =
+[];
+
+showClient();
+
+};
+
+
+/* =========================
+   NAVIGAZIONE
+========================= */
+
+$('adminTab').onclick =
+async()=>{
+
+const {
+data
+} =
+await supabaseClient
+.auth
+.getSession();
+
+if(data.session){
+
+await loadData();
+
+showAdmin();
+
+}else{
+
+showLogin();
+
+}
+
+};
+
+$('clientTab').onclick =
+$('backClient').onclick =
+showClient;
+
+
+/* =========================
+   AUTH EVENT
+========================= */
+
+supabaseClient
+.auth
+.onAuthStateChange(
+(event)=>{
+  
+if(event==='SIGNED_OUT'){
+
+currentProfile =
+null;
+
+appointments =
+[];
+
+showClient();
+
+}
+
+}
+);
+
+
+/* =========================
+   AVVIO
+========================= */
+
+(async function initAuth(){
+
+const {
+data
+} =
+await supabaseClient
+.auth
+.getSession();
+
+if(data.session){
+
+await loadData();
+
+showAdmin();
+
+}else{
+
+showClient();
+
+}
+
+})();
+
 </script>
+
 </body>
 </html>
