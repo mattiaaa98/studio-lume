@@ -334,6 +334,122 @@ input{
 }
 
 /* =========================
+   APPUNTAMENTI CLIENTE
+========================= */
+
+.customer-area{
+  margin-top:30px;
+}
+
+.customer-appointment-card{
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface);
+  margin-top:12px;
+}
+
+.customer-appointment-top{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.customer-appointment-title{
+  font-size:17px;
+  font-weight:800;
+}
+
+.customer-appointment-info{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.6;
+  margin-top:7px;
+}
+
+.appointment-status{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.appointment-status.confirmed{
+  color:#28734a;
+  background:#e8f5ed;
+}
+
+.appointment-status.cancelled{
+  color:#a33a32;
+  background:#fae9e7;
+}
+
+.customer-cancel{
+  width:auto;
+  margin-top:14px;
+  background:transparent;
+  color:#a33a32;
+  border:1px solid #d8aaa5;
+  border-radius:11px;
+  padding:10px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.customer-cancel:hover{
+  background:#faf1f0;
+}
+
+.customer-note{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+
+.customer-empty{
+  padding:18px;
+  border:1px dashed var(--line);
+  border-radius:15px;
+  color:var(--muted);
+  font-size:14px;
+  margin-top:14px;
+}
+
+.confirmation{
+  display:none;
+  margin-top:22px;
+  padding:22px;
+  border-radius:18px;
+  border:1px solid #b8d7c1;
+  background:#edf8f0;
+  color:#285c39;
+}
+
+.confirmation h3{
+  margin:0 0 12px;
+  font:500 25px Georgia,serif;
+}
+
+.confirmation-details{
+  line-height:1.7;
+  font-size:14px;
+}
+
+.confirmation-button{
+  margin-top:16px;
+  border:1px solid #8ab496;
+  background:white;
+  color:#285c39;
+  border-radius:11px;
+  padding:10px 14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* =========================
    AGENDA MENSILE
 ========================= */
 
@@ -503,8 +619,9 @@ input{
   padding:14px 18px;
   border-radius:13px;
   display:none;
-  z-index:10;
+  z-index:20;
   box-shadow:0 12px 35px #0003;
+  max-width:380px;
 }
 
 table th{
@@ -574,6 +691,10 @@ table td{
   .month-title{
     font-size:22px;
     min-width:180px;
+  }
+
+  .customer-appointment-top{
+    flex-direction:column;
   }
 }
 
@@ -686,6 +807,7 @@ style="text-align:center;margin-top:14px"
 
 </section>
 
+
 <!-- CLIENT VIEW -->
 
 <section id="clientView">
@@ -721,12 +843,13 @@ Oggi
 </strong>
 
 <div class="mini">
-Martedì · ultimo appuntamento 18:00
+Ultimo appuntamento 18:30
 </div>
 
 </div>
 
 </div>
+
 
 <div class="section-title">
 
@@ -740,10 +863,12 @@ Passo 1 di 2
 
 </div>
 
+
 <div
 class="services"
 id="services"
 ></div>
+
 
 <div class="booking">
 
@@ -801,6 +926,7 @@ Nome
 <input
 id="name"
 placeholder="Il tuo nome"
+autocomplete="name"
 >
 
 <label for="phone">
@@ -811,6 +937,7 @@ Telefono
 id="phone"
 placeholder="333 123 4567"
 inputmode="tel"
+autocomplete="tel"
 >
 
 <button
@@ -820,7 +947,35 @@ id="confirm"
 Conferma prenotazione
 </button>
 
+
+<!-- CONFERMA PRENOTAZIONE -->
+
+<div
+id="bookingConfirmation"
+class="confirmation"
+>
+
+<h3>
+Prenotazione confermata ✓
+</h3>
+
+<div
+id="bookingConfirmationDetails"
+class="confirmation-details"
+></div>
+
+<button
+class="confirmation-button"
+id="goToMyAppointments"
+type="button"
+>
+Visualizza i miei appuntamenti
+</button>
+
 </div>
+
+</div>
+
 
 <aside class="panel summary">
 
@@ -861,7 +1016,112 @@ Il tuo appuntamento
 
 </div>
 
+
+<!-- =========================
+     I MIEI APPUNTAMENTI
+========================= -->
+
+<section
+class="customer-area"
+id="myAppointmentsSection"
+>
+
+<div class="section-title">
+
+<div>
+
+<div class="eyebrow">
+Area cliente
+</div>
+
+<h2>
+I miei appuntamenti
+</h2>
+
+<p
+class="mini"
+style="margin-top:7px"
+>
+Inserisci nome e telefono utilizzati per la prenotazione.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<div
+style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px;
+"
+class="customer-search-grid"
+>
+
+<div>
+
+<label
+for="customerLookupName"
+style="margin-top:0"
+>
+Nome
+</label>
+
+<input
+id="customerLookupName"
+type="text"
+placeholder="Il tuo nome"
+autocomplete="name"
+>
+
+</div>
+
+
+<div>
+
+<label
+for="customerLookupPhone"
+style="margin-top:0"
+>
+Telefono
+</label>
+
+<input
+id="customerLookupPhone"
+type="tel"
+placeholder="333 123 4567"
+inputmode="tel"
+autocomplete="tel"
+>
+
+</div>
+
+</div>
+
+
+<button
+class="primary"
+id="lookupAppointmentsBtn"
+type="button"
+>
+Visualizza i miei appuntamenti
+</button>
+
+
+<div
+id="customerAppointments"
+style="margin-top:18px"
+></div>
+
+</div>
+
 </section>
+
+</section>
+
 
 <!-- DASHBOARD -->
 
@@ -904,6 +1164,7 @@ id="backClient"
 
 </div>
 
+
 <div class="dashgrid">
 
 <aside class="sidebar">
@@ -936,6 +1197,7 @@ data-view="settings"
 ⚙ Impostazioni
 </button>
 
+
 <div
 style="margin-top:25px;border-top:1px solid var(--line);padding-top:18px"
 >
@@ -960,6 +1222,7 @@ id="countInfo"
 
 </aside>
 
+
 <div id="adminContent"></div>
 
 </div>
@@ -968,6 +1231,7 @@ id="countInfo"
 
 </main>
 
+
 <div
 class="toast"
 id="toast"
@@ -975,13 +1239,14 @@ id="toast"
 
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
-/* =========================
+/* =========================================================
    SUPABASE
-========================= */
+========================================================= */
 
 const SUPABASE_URL =
 'https://npypzpcnknizululwxri.supabase.co';
@@ -999,9 +1264,9 @@ const PUBLIC_SALON_ID =
 'dab13b9a-a5fb-4809-a9ef-26712c5aaa3e';
 
 
-/* =========================
+/* =========================================================
    DATI DEFAULT
-========================= */
+========================================================= */
 
 const defaultServices = [
 
@@ -1039,6 +1304,21 @@ icon:'💇'
 
 ];
 
+
+/*
+  Questi sono i professionisti mostrati al cliente
+  quando non è autenticato.
+
+  L'RPC di prenotazione verifica comunque il nome
+  direttamente nel database.
+*/
+
+const defaultStaff = [
+'Giulia',
+'Marco'
+];
+
+
 const slots = [
 
 '09:00',
@@ -1056,11 +1336,45 @@ const slots = [
 
 ];
 
+
 const $ =
 id => document.getElementById(id);
 
+
 const today =
-() => new Date().toISOString().slice(0,10);
+() => {
+
+const parts =
+new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}
+)
+.formatToParts(new Date());
+
+const year =
+parts.find(
+p=>p.type==='year'
+).value;
+
+const month =
+parts.find(
+p=>p.type==='month'
+).value;
+
+const day =
+parts.find(
+p=>p.type==='day'
+).value;
+
+return `${year}-${month}-${day}`;
+
+};
+
 
 let services =
 defaultServices;
@@ -1077,9 +1391,25 @@ let selectedTime =
 '';
 
 
-/* =========================
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value){
+
+return String(value ?? '')
+.replace(/&/g,'&amp;')
+.replace(/</g,'&lt;')
+.replace(/>/g,'&gt;')
+.replace(/"/g,'&quot;')
+.replace(/'/g,'&#039;');
+
+}
+
+
+/* =========================================================
    TOAST
-========================= */
+========================================================= */
 
 function toast(msg){
 
@@ -1105,18 +1435,53 @@ setTimeout(()=>{
 element.style.display =
 'none';
 
-},3000);
+},3500);
 
 }
 
 
-/* =========================
+/* =========================================================
+   PROFESSIONISTI CLIENTE
+========================================================= */
+
+function loadDefaultStaff(){
+
+const stylist =
+$('stylist');
+
+if(!stylist)
+return;
+
+if(stylist.options.length>0)
+return;
+
+stylist.innerHTML =
+defaultStaff
+.map(name=>`
+
+<option value="${escapeHtml(name)}">
+${escapeHtml(name)} · Professionista
+</option>
+
+`)
+.join('');
+
+}
+
+
+/* =========================================================
    SERVIZI CLIENTE
-========================= */
+========================================================= */
 
 function renderServices(){
 
-$('services').innerHTML =
+const container =
+$('services');
+
+if(!container)
+return;
+
+container.innerHTML =
 services.map((s,i)=>`
 
 <div
@@ -1125,24 +1490,25 @@ data-i="${i}"
 >
 
 <div class="icon">
-${s.icon||'✂️'}
+${escapeHtml(s.icon||'✂️')}
 </div>
 
 <h3>
-${s.name}
+${escapeHtml(s.name)}
 </h3>
 
 <p>
-${s.desc||'Servizio del salone'}
+${escapeHtml(s.desc||'Servizio del salone')}
 </p>
 
 <div class="price">
-€ ${s.price}
+€ ${Number(s.price).toFixed(2).replace('.',',')}
 </div>
 
 </div>
 
 `).join('');
+
 
 document
 .querySelectorAll('.service')
@@ -1177,9 +1543,9 @@ renderTimes();
 }
 
 
-/* =========================
+/* =========================================================
    ORARI
-========================= */
+========================================================= */
 
 function renderTimes(){
 
@@ -1188,6 +1554,16 @@ $('date').value;
 
 const stylist =
 $('stylist').value;
+
+
+/*
+  Se siamo nell'area admin abbiamo gli appuntamenti
+  caricati nel browser.
+
+  Lato cliente invece appointments è vuoto:
+  l'RPC create_public_appointment controlla comunque
+  la reale disponibilità nel database.
+*/
 
 const taken =
 appointments
@@ -1198,6 +1574,7 @@ a.status!=='cancelled'
 )
 .map(a=>a.time);
 
+
 $('times').innerHTML =
 slots.map(t=>{
 
@@ -1207,6 +1584,7 @@ taken.includes(t);
 return `
 
 <button
+type="button"
 class="time"
 ${occupied?'disabled':''}
 data-time="${t}"
@@ -1217,6 +1595,7 @@ ${t}${occupied?' · occupato':''}
 `;
 
 }).join('');
+
 
 document
 .querySelectorAll('.time')
@@ -1247,9 +1626,9 @@ updateSummary();
 }
 
 
-/* =========================
+/* =========================================================
    RIEPILOGO
-========================= */
+========================================================= */
 
 function updateSummary(){
 
@@ -1262,7 +1641,9 @@ selected?.dur||'—';
 $('sumPrice').textContent =
 selected
 ?
-'€ '+selected.price
+'€ '+Number(selected.price)
+.toFixed(2)
+.replace('.',',')
 :
 '—';
 
@@ -1286,9 +1667,9 @@ $('step2').classList.toggle(
 }
 
 
-/* =========================
-   INIZIALIZZAZIONE
-========================= */
+/* =========================================================
+   INIZIALIZZAZIONE CLIENTE
+========================================================= */
 
 $('date').value =
 today();
@@ -1296,10 +1677,14 @@ today();
 $('date').min =
 today();
 
+loadDefaultStaff();
+
 $('date').onchange=()=>{
 
 selectedTime =
 '';
+
+hideBookingConfirmation();
 
 renderTimes();
 
@@ -1311,6 +1696,8 @@ $('stylist').onchange=()=>{
 
 selectedTime =
 '';
+
+hideBookingConfirmation();
 
 renderTimes();
 
@@ -1325,9 +1712,96 @@ renderTimes();
 updateSummary();
 
 
-/* =========================
+/* =========================================================
+   CONFERMA PRENOTAZIONE
+========================================================= */
+
+function showBookingConfirmation(
+name,
+staffName
+){
+
+const date =
+$('date').value;
+
+const formattedDate =
+new Date(
+date+'T12:00'
+)
+.toLocaleDateString(
+'it-IT',
+{
+weekday:'long',
+day:'2-digit',
+month:'long',
+year:'numeric'
+}
+);
+
+$('bookingConfirmationDetails')
+.innerHTML = `
+
+<strong>
+${escapeHtml(selected.name)}
+</strong>
+
+<br>
+
+${escapeHtml(formattedDate)}
+
+<br>
+
+Ore <strong>
+${escapeHtml(selectedTime)}
+</strong>
+
+<br>
+
+Professionista:
+<strong>
+${escapeHtml(staffName)}
+</strong>
+
+<br>
+
+Prezzo:
+<strong>
+€ ${Number(selected.price)
+.toFixed(2)
+.replace('.',',')}
+</strong>
+
+`;
+
+$('bookingConfirmation').style.display =
+'block';
+
+
+/*
+  Compiliamo automaticamente la sezione
+  "I miei appuntamenti".
+*/
+
+$('customerLookupName').value =
+name;
+
+$('customerLookupPhone').value =
+$('phone').dataset.lastPhone || '';
+
+}
+
+
+function hideBookingConfirmation(){
+
+$('bookingConfirmation').style.display =
+'none';
+
+}
+
+
+/* =========================================================
    PRENOTAZIONE PUBBLICA
-========================= */
+========================================================= */
 
 async function confirmBooking(){
 
@@ -1348,6 +1822,16 @@ if(
 
 toast(
 'Completa nome, telefono e scegli un orario.'
+);
+
+return;
+
+}
+
+if(!$('date').value){
+
+toast(
+'Scegli una data.'
 );
 
 return;
@@ -1407,15 +1891,32 @@ console.log(
 data
 );
 
+
+/*
+  Salviamo il telefono solo nel DOM:
+  serve per precompilare "I miei appuntamenti".
+*/
+
+$('phone').dataset.lastPhone =
+phone;
+
 toast(
 'Prenotazione confermata per '+name+'.'
 );
+
+
+showBookingConfirmation(
+name,
+staffName
+);
+
 
 $('name').value =
 '';
 
 $('phone').value =
 '';
+
 
 selectedTime =
 '';
@@ -1464,9 +1965,480 @@ $('confirm').onclick =
 confirmBooking;
 
 
-/* =========================
+/* =========================================================
+   I MIEI APPUNTAMENTI
+========================================================= */
+
+function formatCustomerDate(
+iso
+){
+
+return new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+weekday:'long',
+day:'2-digit',
+month:'long',
+year:'numeric'
+}
+)
+.format(
+new Date(iso)
+);
+
+}
+
+
+function formatCustomerTime(
+iso
+){
+
+return new Intl.DateTimeFormat(
+'it-IT',
+{
+timeZone:'Europe/Rome',
+hour:'2-digit',
+minute:'2-digit',
+hour12:false
+}
+)
+.format(
+new Date(iso)
+);
+
+}
+
+
+function canCustomerCancel(
+startsAt
+){
+
+const appointmentTime =
+new Date(startsAt)
+.getTime();
+
+const minimum =
+Date.now()+
+24*60*60*1000;
+
+return appointmentTime >= minimum;
+
+}
+
+
+async function loadCustomerAppointments(){
+
+const name =
+$('customerLookupName')
+.value
+.trim();
+
+const phone =
+$('customerLookupPhone')
+.value
+.trim();
+
+const container =
+$('customerAppointments');
+
+
+if(!name || !phone){
+
+container.innerHTML = `
+
+<div class="customer-empty">
+Inserisci nome e numero di telefono utilizzati
+per la prenotazione.
+</div>
+
+`;
+
+return;
+
+}
+
+
+container.innerHTML = `
+
+<div class="customer-empty">
+Ricerca degli appuntamenti in corso…
+</div>
+
+`;
+
+
+const {
+data,
+error
+} =
+await supabaseClient.rpc(
+'get_public_customer_appointments',
+{
+
+p_salon_id:
+PUBLIC_SALON_ID,
+
+p_customer_name:
+name,
+
+p_customer_phone:
+phone
+
+}
+);
+
+
+if(error){
+
+console.error(
+'Errore caricamento appuntamenti:',
+error
+);
+
+container.innerHTML = `
+
+<div class="customer-empty">
+Non è stato possibile caricare gli appuntamenti.
+Riprova tra qualche secondo.
+</div>
+
+`;
+
+return;
+
+}
+
+
+if(!data || data.length===0){
+
+container.innerHTML = `
+
+<div class="customer-empty">
+Non risultano appuntamenti associati
+a questi dati.
+</div>
+
+`;
+
+return;
+
+}
+
+
+container.innerHTML =
+data.map(a=>{
+
+const isCancelled =
+a.status==='cancelled';
+
+const isConfirmed =
+a.status==='confirmed';
+
+const canCancel =
+isConfirmed &&
+canCustomerCancel(
+a.starts_at
+);
+
+
+let statusHtml = '';
+
+
+if(isCancelled){
+
+statusHtml = `
+
+<span class="appointment-status cancelled">
+Annullato
+</span>
+
+`;
+
+}else if(canCancel){
+
+statusHtml = `
+
+<span class="appointment-status confirmed">
+Confermato
+</span>
+
+<button
+type="button"
+class="customer-cancel"
+data-customer-cancel="${escapeHtml(a.id)}"
+>
+Annulla appuntamento
+</button>
+
+`;
+
+}else if(isConfirmed){
+
+statusHtml = `
+
+<span class="appointment-status confirmed">
+Confermato
+</span>
+
+<div class="customer-note">
+Non è più possibile annullare online.
+L'annullamento è consentito fino a 24 ore prima
+dell'appuntamento.
+</div>
+
+`;
+
+}else{
+
+statusHtml = `
+
+<span class="appointment-status">
+${escapeHtml(a.status||'')}
+</span>
+
+`;
+
+}
+
+
+return `
+
+<div class="customer-appointment-card">
+
+<div class="customer-appointment-top">
+
+<div>
+
+<div class="customer-appointment-title">
+${escapeHtml(a.service_name||'Servizio')}
+</div>
+
+<div class="customer-appointment-info">
+
+${escapeHtml(
+formatCustomerDate(a.starts_at)
+)}
+
+<br>
+
+Ore <strong>
+${escapeHtml(
+formatCustomerTime(a.starts_at)
+)}
+</strong>
+
+<br>
+
+Professionista:
+${escapeHtml(a.staff_name||'Professionista')}
+
+<br>
+
+${
+a.price!=null
+?
+'€ '+Number(a.price)
+.toFixed(2)
+.replace('.',',')
+:
+''
+}
+
+</div>
+
+</div>
+
+<div>
+${statusHtml}
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}).join('');
+
+
+/*
+  Colleghiamo i pulsanti annulla
+*/
+
+document
+.querySelectorAll('[data-customer-cancel]')
+.forEach(button=>{
+
+button.onclick =
+()=>{
+
+cancelCustomerAppointment(
+button.dataset.customerCancel
+);
+
+};
+
+});
+
+}
+
+
+async function cancelCustomerAppointment(
+appointmentId
+){
+
+const name =
+$('customerLookupName')
+.value
+.trim();
+
+const phone =
+$('customerLookupPhone')
+.value
+.trim();
+
+
+if(!name || !phone){
+
+toast(
+'Inserisci nome e telefono.'
+);
+
+return;
+
+}
+
+
+const confirmed =
+confirm(
+'Sei sicuro di voler annullare questo appuntamento?'
+);
+
+
+if(!confirmed)
+return;
+
+
+const {
+data,
+error
+} =
+await supabaseClient.rpc(
+'cancel_public_appointment',
+{
+
+p_salon_id:
+PUBLIC_SALON_ID,
+
+p_appointment_id:
+appointmentId,
+
+p_customer_name:
+name,
+
+p_customer_phone:
+phone
+
+}
+);
+
+
+if(error){
+
+console.error(
+'Errore annullamento:',
+error
+);
+
+toast(
+'Non è stato possibile annullare l’appuntamento.'
+);
+
+return;
+
+}
+
+
+/*
+  Il database restituisce true SOLO se
+  l'annullamento è realmente avvenuto.
+*/
+
+if(data !== true){
+
+toast(
+'L’appuntamento non può più essere annullato online. '+
+'È necessario annullarlo almeno 24 ore prima.'
+);
+
+await loadCustomerAppointments();
+
+return;
+
+}
+
+
+toast(
+'Appuntamento annullato.'
+);
+
+
+await loadCustomerAppointments();
+
+}
+
+
+$('lookupAppointmentsBtn')
+.onclick =
+loadCustomerAppointments;
+
+
+/*
+  Dopo la prenotazione porta il cliente
+  alla sezione "I miei appuntamenti".
+*/
+
+$('goToMyAppointments')
+.onclick =
+()=>{
+
+$('myAppointmentsSection')
+.scrollIntoView({
+behavior:'smooth',
+block:'start'
+});
+
+};
+
+
+function prefillCustomerLookup(){
+
+const name =
+$('customerLookupName');
+
+const phone =
+$('customerLookupPhone');
+
+if(
+!name.value &&
+!phone.value
+){
+
+/*
+  Non possiamo recuperare il telefono dopo
+  che l'utente ha cancellato il campo booking.
+  Il cliente può inserirlo manualmente.
+*/
+
+}
+
+}
+
+
+/* =========================================================
    AGENDA
-========================= */
+========================================================= */
 
 function romeDateKey(date){
 
@@ -1482,22 +2454,28 @@ day:'2-digit'
 ).formatToParts(date);
 
 const year =
-parts.find(p=>p.type==='year').value;
+parts.find(
+p=>p.type==='year'
+).value;
 
 const month =
-parts.find(p=>p.type==='month').value;
+parts.find(
+p=>p.type==='month'
+).value;
 
 const day =
-parts.find(p=>p.type==='day').value;
+parts.find(
+p=>p.type==='day'
+).value;
 
 return `${year}-${month}-${day}`;
 
 }
 
 
-/* =========================
-   ANNULLAMENTO
-========================= */
+/* =========================================================
+   ANNULLAMENTO ADMIN
+========================================================= */
 
 async function cancelAppointment(id){
 
@@ -1545,9 +2523,9 @@ toast(
 }
 
 
-/* =========================
+/* =========================================================
    RENDER ADMIN
-========================= */
+========================================================= */
 
 function renderAdmin(
 view='agenda'
@@ -1574,7 +2552,9 @@ appointments
 );
 
 $('revenue').textContent =
-'€ '+total;
+'€ '+Number(total)
+.toFixed(2)
+.replace('.',',');
 
 $('countInfo').textContent =
 appointments.filter(
@@ -1583,9 +2563,9 @@ a=>a.status!=='cancelled'
 ' appuntamenti salvati';
 
 
-/* =========================
+/* =========================================================
    AGENDA MENSILE
-========================= */
+========================================================= */
 
 if(view==='agenda'){
 
@@ -1688,6 +2668,7 @@ a.status!=='cancelled'
 
 });
 
+
 content.innerHTML = `
 
 <div class="agenda-toolbar">
@@ -1752,6 +2733,7 @@ ${day}
 </div>
 
 `).join('')}
+
 
 ${Array.from(
 {
@@ -1849,6 +2831,7 @@ ${list.length} app.
 
 </div>
 
+
 ${
 list.length
 
@@ -1858,20 +2841,20 @@ list.map(a=>`
 
 <div
 class="appt"
-data-appointment="${a.id}"
+data-appointment="${escapeHtml(a.id)}"
 title="Clicca per gestire l'appuntamento"
 >
 
 <b>
-${a.time} · ${a.name}
+${escapeHtml(a.time)} · ${escapeHtml(a.name)}
 </b>
 
 <div>
-${a.service}
+${escapeHtml(a.service)}
 </div>
 
 <span class="mini">
-${a.stylist||'Professionista'}
+${escapeHtml(a.stylist||'Professionista')}
 </span>
 
 </div>
@@ -1964,7 +2947,7 @@ card.onclick =
 const appointment =
 appointments.find(
 a=>
-a.id===
+a.id ===
 card.dataset.appointment
 );
 
@@ -2002,9 +2985,9 @@ return;
 }
 
 
-/* =========================
+/* =========================================================
    SERVIZI ADMIN
-========================= */
+========================================================= */
 
 if(view==='servicesAdmin'){
 
@@ -2030,17 +3013,17 @@ border-bottom:1px solid var(--line)
 >
 
 <span style="font-size:22px">
-${s.icon||'✂️'}
+${escapeHtml(s.icon||'✂️')}
 </span>
 
 <div style="flex:1">
 
 <b>
-${s.name}
+${escapeHtml(s.name)}
 </b>
 
 <div class="mini">
-${s.dur} · € ${s.price}
+${escapeHtml(s.dur)} · € ${Number(s.price).toFixed(2).replace('.',',')}
 </div>
 
 </div>
@@ -2068,6 +3051,7 @@ id="addService"
 </div>
 
 `;
+
 
 document
 .querySelectorAll('[data-remove-service]')
@@ -2131,6 +3115,7 @@ renderAdmin(
 };
 
 });
+
 
 $('addService').onclick =
 async()=>{
@@ -2231,9 +3216,9 @@ return;
 }
 
 
-/* =========================
+/* =========================================================
    CLIENTI
-========================= */
+========================================================= */
 
 if(view==='clients'){
 
@@ -2279,15 +3264,15 @@ ${clients.map(c=>`
 <tr>
 
 <td style="padding:10px;border-top:1px solid var(--line)">
-${c.name}
+${escapeHtml(c.name)}
 </td>
 
 <td style="padding:10px;border-top:1px solid var(--line)">
-${c.phone}
+${escapeHtml(c.phone)}
 </td>
 
 <td style="padding:10px;border-top:1px solid var(--line)">
-${c.service}
+${escapeHtml(c.service)}
 </td>
 
 </tr>
@@ -2307,9 +3292,9 @@ return;
 }
 
 
-/* =========================
+/* =========================================================
    IMPOSTAZIONI
-========================= */
+========================================================= */
 
 if(view==='settings'){
 
@@ -2388,9 +3373,9 @@ return;
 }
 
 
-/* =========================
-   CARICAMENTO DATI
-========================= */
+/* =========================================================
+   CARICAMENTO DATI ADMIN
+========================================================= */
 
 async function loadData(
 showErrors=true
@@ -2407,6 +3392,7 @@ userResult?.data?.user;
 if(!user)
 return;
 
+
 const profile =
 await supabaseClient
 .from('profiles')
@@ -2416,6 +3402,7 @@ await supabaseClient
 user.id
 )
 .maybeSingle();
+
 
 if(
 profile.error ||
@@ -2434,11 +3421,13 @@ return;
 
 }
 
+
 currentProfile =
 profile.data;
 
 const salonId =
 currentProfile.salon_id;
+
 
 const [
 servicesResult,
@@ -2491,6 +3480,7 @@ true
 
 ]);
 
+
 if(
 servicesResult.error ||
 appointmentsResult.error ||
@@ -2539,6 +3529,7 @@ dur:
 ' min',
 
 icon:
+x.icon ||
 '✂️'
 
 }));
@@ -2567,8 +3558,10 @@ day:'2-digit'
 .format(start)
 .split('/');
 
+
 const date =
 `${parts[2]}-${parts[1]}-${parts[0]}`;
+
 
 const time =
 new Intl.DateTimeFormat(
@@ -2581,6 +3574,7 @@ hour12:false
 }
 )
 .format(start);
+
 
 return {
 
@@ -2635,16 +3629,18 @@ $('stylist').innerHTML =
 staffResult.data
 .map(x=>`
 
-<option value="${x.name}">
-${x.name} · ${x.role||'Professionista'}
+<option value="${escapeHtml(x.name)}">
+${escapeHtml(x.name)} · ${escapeHtml(x.role||'Professionista')}
 </option>
 
 `)
 .join('');
 
+
 selected =
 services[0] ||
 defaultServices[0];
+
 
 renderServices();
 
@@ -2655,9 +3651,9 @@ updateSummary();
 }
 
 
-/* =========================
+/* =========================================================
    MENU SIDEBAR
-========================= */
+========================================================= */
 
 document
 .querySelectorAll('.sidebtn')
@@ -2675,9 +3671,9 @@ button.dataset.view
 });
 
 
-/* =========================
+/* =========================================================
    CAMBIO VISTA
-========================= */
+========================================================= */
 
 function showLogin(){
 
@@ -2697,6 +3693,7 @@ $('adminTab')
 .classList.add('active');
 
 }
+
 
 function showAdmin(){
 
@@ -2721,6 +3718,7 @@ renderAdmin(
 
 }
 
+
 function showClient(){
 
 $('loginView').style.display =
@@ -2738,14 +3736,16 @@ $('adminTab')
 $('clientTab')
 .classList.add('active');
 
+loadDefaultStaff();
+
 renderTimes();
 
 }
 
 
-/* =========================
+/* =========================================================
    LOGIN
-========================= */
+========================================================= */
 
 $('loginBtn').onclick =
 async()=>{
@@ -2763,6 +3763,7 @@ $('loginMsg')
 .textContent =
 'Accesso in corso…';
 
+
 const {
 error
 } =
@@ -2774,6 +3775,7 @@ email,
 password
 
 });
+
 
 if(error){
 
@@ -2787,6 +3789,7 @@ return;
 
 }
 
+
 $('loginMsg')
 .textContent =
 '';
@@ -2798,9 +3801,9 @@ showAdmin();
 };
 
 
-/* =========================
+/* =========================================================
    LOGOUT
-========================= */
+========================================================= */
 
 $('logoutBtn').onclick =
 async()=>{
@@ -2815,14 +3818,22 @@ null;
 appointments =
 [];
 
+services =
+defaultServices;
+
+selected =
+services[0];
+
+loadDefaultStaff();
+
 showClient();
 
 };
 
 
-/* =========================
+/* =========================================================
    NAVIGAZIONE
-========================= */
+========================================================= */
 
 $('adminTab').onclick =
 async()=>{
@@ -2833,6 +3844,7 @@ data
 await supabaseClient
 .auth
 .getSession();
+
 
 if(data.session){
 
@@ -2848,20 +3860,21 @@ showLogin();
 
 };
 
+
 $('clientTab').onclick =
 $('backClient').onclick =
 showClient;
 
 
-/* =========================
+/* =========================================================
    AUTH EVENT
-========================= */
+========================================================= */
 
 supabaseClient
 .auth
 .onAuthStateChange(
 (event)=>{
-  
+
 if(event==='SIGNED_OUT'){
 
 currentProfile =
@@ -2869,6 +3882,12 @@ null;
 
 appointments =
 [];
+
+services =
+defaultServices;
+
+selected =
+services[0];
 
 showClient();
 
@@ -2878,11 +3897,13 @@ showClient();
 );
 
 
-/* =========================
+/* =========================================================
    AVVIO
-========================= */
+========================================================= */
 
 (async function initAuth(){
+
+loadDefaultStaff();
 
 const {
 data
@@ -2890,6 +3911,7 @@ data
 await supabaseClient
 .auth
 .getSession();
+
 
 if(data.session){
 
