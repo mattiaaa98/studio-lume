@@ -802,6 +802,27 @@ table td{
     font-size:48px;
   }
 }
+
+/* STATISTICHE E PAGAMENTI */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.stats-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;min-width:0}
+.stats-card .stats-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.stats-card .stats-value{font-size:clamp(20px,3vw,29px);font-weight:750;margin-top:8px;overflow-wrap:anywhere}
+.stats-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+.stats-controls label{display:block;margin:0 0 6px}
+.stats-controls input,.stats-controls select{width:100%;min-width:0}
+.stats-table-wrap{overflow:auto;margin-top:12px}
+.stats-table{width:100%;border-collapse:collapse;min-width:680px}
+.stats-table th,.stats-table td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+.payment-pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700;background:var(--surface2)}
+.payment-paid{color:#176b45}.payment-unpaid{color:#98621e}
+.stats-small-btn{padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--text);cursor:pointer;white-space:nowrap}
+.expense-form{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr auto;gap:10px;align-items:end}
+.expense-form label{display:block;margin:0 0 6px}
+.expense-form input,.expense-form select{width:100%;min-width:0}
+@media(max-width:850px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.expense-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.stats-controls,.expense-form{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 
@@ -1284,6 +1305,13 @@ class="sidebtn"
 data-view="closures"
 >
 🗓 Chiusure e ferie
+</button>
+
+<button
+class="sidebtn"
+data-view="statistics"
+>
+📊 Statistiche e incassi
 </button>
 
 <button
@@ -3494,6 +3522,136 @@ return;
 
 
 /* =========================================================
+   STATISTICHE, INCASSI, COSTI E PAGAMENTI
+========================================================= */
+if(view==='statistics'){
+  $('dashTitle').textContent = 'Statistiche e incassi';
+  const todayKey = today();
+  const monthStart = todayKey.slice(0,7) + '-01';
+  const monthEndDate = new Date(Number(todayKey.slice(0,4)), Number(todayKey.slice(5,7)), 0);
+  const monthEnd = `${monthEndDate.getFullYear()}-${String(monthEndDate.getMonth()+1).padStart(2,'0')}-${String(monthEndDate.getDate()).padStart(2,'0')}`;
+  const expensesResult = await supabaseClient.from('salon_expenses')
+    .select('id,expense_date,category,description,amount,created_at')
+    .eq('salon_id', currentProfile.salon_id)
+    .order('expense_date', {ascending:false});
+  if(expensesResult.error){
+    console.error('Errore caricamento costi:', expensesResult.error);
+    content.innerHTML = `<div class="panel"><h3>Statistiche non ancora configurate</h3><p class="mini">Esegui prima lo script <strong>salon_statistics.sql</strong> nell'SQL Editor di Supabase, poi ricarica la pagina.</p></div>`;
+    return;
+  }
+  const expenses = expensesResult.data || [];
+  const money = value => '€ ' + Number(value || 0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const safeDate = value => value ? new Date(value+'T12:00:00').toLocaleDateString('it-IT') : '—';
+  content.innerHTML = `
+    <div class="panel">
+      <div class="eyebrow">Report economico</div>
+      <h3 style="font:500 25px Georgia,serif;margin:8px 0 6px">Incassi, costi e guadagno netto</h3>
+      <p class="mini">Gli incassi effettivi comprendono solo gli appuntamenti segnati come pagati. Gli appuntamenti non pagati restano separati come importi da incassare. Il netto qui è una stima gestionale: incassi pagati meno costi registrati.</p>
+      <div class="stats-controls" style="margin-top:18px">
+        <div><label for="statsMode">Raggruppamento</label><select id="statsMode"><option value="week">Settimana per settimana</option><option value="month" selected>Mese per mese</option><option value="custom">Intervallo personalizzato (giorni)</option></select></div>
+        <div><label for="statsStart">Dal</label><input type="date" id="statsStart" value="${monthStart}"></div>
+        <div><label for="statsEnd">Al</label><input type="date" id="statsEnd" value="${monthEnd}"></div>
+        <div><button class="primary" id="applyStats" type="button">Aggiorna report</button></div>
+      </div>
+    </div>
+    <div id="statsResults"></div>
+    <div class="panel" style="margin-top:16px">
+      <div class="eyebrow">Gestione costi</div>
+      <h3 style="font:500 24px Georgia,serif;margin:8px 0 14px">Registra una spesa</h3>
+      <div class="expense-form">
+        <div><label for="expenseDate">Data</label><input type="date" id="expenseDate" value="${todayKey}" required></div>
+        <div><label for="expenseCategory">Categoria</label><select id="expenseCategory"><option>Affitto</option><option>Stipendi</option><option>Prodotti</option><option>Utenze</option><option>Attrezzature</option><option>Marketing</option><option>Tasse e commissioni</option><option>Altro</option></select></div>
+        <div><label for="expenseAmount">Importo (€)</label><input type="number" id="expenseAmount" min="0.01" step="0.01" placeholder="0,00"></div>
+        <div><label for="expenseDescription">Descrizione</label><input type="text" id="expenseDescription" maxlength="180" placeholder="Es. prodotti colore"></div>
+        <div><button class="primary" id="saveExpense" type="button">Aggiungi costo</button></div>
+      </div>
+      <p class="mini">Inserisci gli importi realmente sostenuti. Le spese ricorrenti vanno registrate per ciascun periodo.</p>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="eyebrow">Storico spese</div><h3 style="font:500 24px Georgia,serif;margin:8px 0">Ultimi costi registrati</h3>
+      <div id="expensesList"></div>
+    </div>`;
+
+  const renderStats = () => {
+    const mode = $('statsMode').value;
+    const from = $('statsStart').value;
+    const to = $('statsEnd').value;
+    const target = $('statsResults');
+    if(!from || !to || from > to){ target.innerHTML='<div class="panel">Seleziona un intervallo di date valido.</div>'; return; }
+    const filteredAppointments = appointments.filter(a=>a.date>=from && a.date<=to && a.status!=='cancelled');
+    const filteredExpenses = expenses.filter(e=>e.expense_date>=from && e.expense_date<=to);
+    const paid = filteredAppointments.filter(a=>a.payment_status==='paid').reduce((sum,a)=>sum+Number(a.price||0),0);
+    const unpaid = filteredAppointments.filter(a=>a.payment_status!=='paid').reduce((sum,a)=>sum+Number(a.price||0),0);
+    const cost = filteredExpenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
+    const net = paid-cost;
+    const keyFor = date => {
+      if(mode==='month') return date.slice(0,7);
+      if(mode==='week'){
+        const d = new Date(date+'T12:00:00');
+        const day = (d.getDay()+6)%7; d.setDate(d.getDate()-day);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+      return date;
+    };
+    const groups = new Map();
+    const add = (date,field,amount) => { const key=keyFor(date); if(!groups.has(key)) groups.set(key,{paid:0,unpaid:0,cost:0}); groups.get(key)[field]+=Number(amount||0); };
+    filteredAppointments.forEach(a=>add(a.date,a.payment_status==='paid'?'paid':'unpaid',a.price));
+    filteredExpenses.forEach(e=>add(e.expense_date,'cost',e.amount));
+    const groupLabel = key => mode==='month' ? new Date(key+'-15T12:00:00').toLocaleDateString('it-IT',{month:'long',year:'numeric'}) : mode==='week' ? `Settimana dal ${safeDate(key)}` : safeDate(key);
+    const rows = [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([key,g])=>`<tr><td>${escapeHtml(groupLabel(key))}</td><td>${money(g.paid)}</td><td>${money(g.unpaid)}</td><td>${money(g.cost)}</td><td><strong>${money(g.paid-g.cost)}</strong></td></tr>`).join('');
+    target.innerHTML = `
+      <div class="stats-grid">
+        <div class="stats-card"><div class="stats-label">Incassi effettivi</div><div class="stats-value">${money(paid)}</div></div>
+        <div class="stats-card"><div class="stats-label">Da incassare</div><div class="stats-value">${money(unpaid)}</div></div>
+        <div class="stats-card"><div class="stats-label">Costi registrati</div><div class="stats-value">${money(cost)}</div></div>
+        <div class="stats-card"><div class="stats-label">Netto stimato</div><div class="stats-value">${money(net)}</div></div>
+      </div>
+      <div class="panel"><div class="eyebrow">Andamento del periodo</div><div class="stats-table-wrap"><table class="stats-table"><thead><tr><th>Periodo</th><th>Incassi pagati</th><th>Da incassare</th><th>Costi</th><th>Netto stimato</th></tr></thead><tbody>${rows || '<tr><td colspan="5">Nessun movimento nel periodo selezionato.</td></tr>'}</tbody></table></div></div>
+      <div class="panel" style="margin-top:16px"><div class="eyebrow">Prenotazioni e pagamenti</div><h3 style="font:500 24px Georgia,serif;margin:8px 0">Segna gli appuntamenti pagati</h3><p class="mini">Premi il pulsante dopo aver ricevuto il pagamento. Il cambiamento viene salvato in Supabase.</p><div class="stats-table-wrap"><table class="stats-table"><thead><tr><th>Data</th><th>Cliente</th><th>Servizio</th><th>Importo</th><th>Pagamento</th><th>Azione</th></tr></thead><tbody>${filteredAppointments.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).map(a=>`<tr><td>${safeDate(a.date)} · ${escapeHtml(a.time)}</td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.service)}</td><td>${money(a.price)}</td><td><span class="payment-pill ${a.payment_status==='paid'?'payment-paid':'payment-unpaid'}">${a.payment_status==='paid'?'Pagato':'Non pagato'}</span></td><td><button class="stats-small-btn" type="button" data-payment-id="${escapeHtml(a.id)}" data-payment-next="${a.payment_status==='paid'?'unpaid':'paid'}">${a.payment_status==='paid'?'Segna non pagato':'Segna pagato'}</button></td></tr>`).join('') || '<tr><td colspan="6">Nessuna prenotazione nel periodo selezionato.</td></tr>'}</tbody></table></div></div>`;
+    target.querySelectorAll('[data-payment-id]').forEach(button=>button.onclick=async()=>{
+      const id=button.dataset.paymentId, next=button.dataset.paymentNext;
+      const update={payment_status:next,paid_at:next==='paid'?new Date().toISOString():null};
+      const {error}=await supabaseClient.from('appointments').update(update).eq('id',id).eq('salon_id',currentProfile.salon_id);
+      if(error){console.error('Errore aggiornamento pagamento:',error);toast('Impossibile aggiornare il pagamento. Verifica di aver eseguito salon_statistics.sql.');return;}
+      toast(next==='paid'?'Pagamento registrato.':'Pagamento riportato a non pagato.');
+      await loadData(false);
+      renderAdmin('statistics');
+    });
+  };
+  const renderExpenses = () => {
+    const list=$('expensesList');
+    const recent=[...expenses].sort((a,b)=>b.expense_date.localeCompare(a.expense_date)).slice(0,100);
+    list.innerHTML = recent.length ? `<div class="stats-table-wrap"><table class="stats-table"><thead><tr><th>Data</th><th>Categoria</th><th>Descrizione</th><th>Importo</th><th></th></tr></thead><tbody>${recent.map(e=>`<tr><td>${safeDate(e.expense_date)}</td><td>${escapeHtml(e.category)}</td><td>${escapeHtml(e.description||'—')}</td><td>${money(e.amount)}</td><td><button class="stats-small-btn" type="button" data-delete-expense="${escapeHtml(e.id)}">Elimina</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="mini">Non hai ancora registrato spese.</p>';
+    list.querySelectorAll('[data-delete-expense]').forEach(button=>button.onclick=async()=>{
+      if(!confirm('Eliminare questa spesa?')) return;
+      const {error}=await supabaseClient.from('salon_expenses').delete().eq('id',button.dataset.deleteExpense).eq('salon_id',currentProfile.salon_id);
+      if(error){console.error(error);toast('Impossibile eliminare la spesa.');return;}
+      toast('Spesa eliminata.');renderAdmin('statistics');
+    });
+  };
+  $('applyStats').onclick=renderStats;
+  $('statsMode').onchange=()=>{
+    if($('statsMode').value==='month'){
+      $('statsStart').value=$('statsStart').value.slice(0,7)+'-01';
+      const [y,m]=$('statsStart').value.split('-').map(Number); const last=new Date(y,m,0); $('statsEnd').value=`${y}-${String(m).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+    }
+    renderStats();
+  };
+  $('saveExpense').onclick=async()=>{
+    const expenseDate=$('expenseDate').value;
+    const category=$('expenseCategory').value;
+    const amount=Number($('expenseAmount').value);
+    const description=$('expenseDescription').value.trim();
+    if(!expenseDate || !Number.isFinite(amount) || amount<=0){toast('Inserisci una data e un importo maggiore di zero.');return;}
+    const {error}=await supabaseClient.from('salon_expenses').insert({salon_id:currentProfile.salon_id,expense_date:expenseDate,category,amount,description:description||null,created_by:(await supabaseClient.auth.getUser()).data.user?.id||null});
+    if(error){console.error('Errore salvataggio spesa:',error);toast('Impossibile salvare la spesa. Verifica le policy SQL.');return;}
+    toast('Spesa registrata.');renderAdmin('statistics');
+  };
+  renderStats();renderExpenses();
+  return;
+}
+
+/* =========================================================
    CHIUSURE E FERIE
 ========================================================= */
 
@@ -3887,10 +4045,7 @@ x.services?.name ||
 'Servizio',
 
 price:
-Number(
-x.services?.price ||
-0
-),
+Number(x.price ?? x.services?.price ?? 0),
 
 stylist:
 x.staff?.name ||
@@ -3898,6 +4053,12 @@ x.staff?.name ||
 
 status:
 x.status,
+
+payment_status:
+x.payment_status || 'unpaid',
+
+paid_at:
+x.paid_at || null,
 
 starts_at:
 x.starts_at,
