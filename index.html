@@ -647,6 +647,92 @@ table td{
   border-radius:10px;
 }
 
+/* CALENDARIO PRENOTAZIONI CON DATE BLOCCATE */
+.booking-calendar{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:var(--surface);
+}
+.booking-calendar-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:10px;
+}
+.booking-calendar-month{
+  font-weight:800;
+  text-transform:capitalize;
+  text-align:center;
+}
+.booking-calendar-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+}
+.booking-calendar-weekday{
+  text-align:center;
+  font-size:11px;
+  color:var(--muted);
+  padding:6px 0;
+  font-weight:800;
+}
+.booking-day{
+  border:1px solid var(--line);
+  background:var(--surface2);
+  color:var(--text);
+  border-radius:9px;
+  min-height:36px;
+  cursor:pointer;
+}
+.booking-day:hover:not(:disabled),
+.booking-day.selected{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.booking-day:disabled{
+  cursor:not-allowed;
+  opacity:.28;
+  text-decoration:line-through;
+}
+.booking-calendar-legend{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px;
+}
+.closure-form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.closure-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:15px;
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.closure-card small{display:block;color:var(--muted);margin-top:5px}
+.danger-button{
+  border:1px solid #d8aaa5;
+  background:transparent;
+  color:#a33a32;
+  border-radius:10px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:700;
+}
+@media(max-width:600px){
+  .closure-form{grid-template-columns:1fr}
+  .booking-day{min-height:32px;padding:4px 0}
+}
+
 @media(max-width:850px){
 
   .hero,
@@ -896,13 +982,16 @@ Quando vuoi venire?
 </h2>
 
 <label for="date">
-Data
+Data dell'appuntamento
 </label>
-
 <input
 id="date"
-type="date"
+type="text"
+readonly
+aria-label="Data dell'appuntamento"
+placeholder="Seleziona una data dal calendario"
 >
+<div id="bookingCalendar" class="booking-calendar" aria-label="Calendario per la prenotazione"></div>
 
 <label for="stylist">
 Professionista
@@ -1192,6 +1281,13 @@ data-view="clients"
 
 <button
 class="sidebtn"
+data-view="closures"
+>
+🗓 Chiusure e ferie
+</button>
+
+<button
+class="sidebtn"
 data-view="settings"
 >
 ⚙ Impostazioni
@@ -1390,6 +1486,10 @@ services[0];
 
 let selectedTime =
 '';
+
+let salonClosures = [];
+let bookingCalendarMonth = new Date();
+bookingCalendarMonth.setDate(1);
 
 
 /* =========================================================
@@ -1672,25 +1772,111 @@ $('step2').classList.toggle(
    INIZIALIZZAZIONE CLIENTE
 ========================================================= */
 
-$('date').value =
-today();
+// Il calendario personalizzato disabilita weekend, date passate e chiusure.
+function dateKeyFromDate(date){
+  const year = date.getFullYear();
+  const month = String(date.getMonth()+1).padStart(2,'0');
+  const day = String(date.getDate()).padStart(2,'0');
+  return `${year}-${month}-${day}`;
+}
 
-$('date').min =
-today();
+function isSalonClosed(dateKey){
+  if(!dateKey) return false;
+  const day = new Date(dateKey+'T12:00:00').getDay();
+  if(day===0 || day===6) return true;
+  return salonClosures.some(c => dateKey >= c.start_date && dateKey <= c.end_date);
+}
 
+function isDateDisabled(dateKey){
+  return dateKey < today() || isSalonClosed(dateKey);
+}
+
+function nextBookableDate(value){
+  const date = new Date(value+'T12:00:00');
+  for(let i=0;i<370;i++){
+    const key = dateKeyFromDate(date);
+    if(!isDateDisabled(key)) return key;
+    date.setDate(date.getDate()+1);
+  }
+  return value;
+}
+
+function renderBookingCalendar(){
+  const container = $('bookingCalendar');
+  if(!container) return;
+  const year = bookingCalendarMonth.getFullYear();
+  const month = bookingCalendarMonth.getMonth();
+  const monthName = new Intl.DateTimeFormat('it-IT',{month:'long',year:'numeric'}).format(bookingCalendarMonth);
+  const firstWeekday = (new Date(year,month,1).getDay()+6)%7;
+  const daysInMonth = new Date(year,month+1,0).getDate();
+  const weekdayLabels = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  let cells = weekdayLabels.map(d=>`<div class="booking-calendar-weekday">${d}</div>`).join('');
+  for(let i=0;i<firstWeekday;i++) cells += '<div></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const date = new Date(year,month,day);
+    const key = dateKeyFromDate(date);
+    const disabled = isDateDisabled(key);
+    const selectedClass = $('date').value===key ? 'selected' : '';
+    const closure = salonClosures.some(c=>key>=c.start_date && key<=c.end_date);
+    const reason = closure ? 'Chiuso per ferie o chiusura del salone' : ((date.getDay()===0||date.getDay()===6) ? 'Salone chiuso nel fine settimana' : '');
+    cells += `<button type="button" class="booking-day ${selectedClass}" data-booking-date="${key}" ${disabled?'disabled':''} ${disabled&&reason?`title="${escapeHtml(reason)}"`:''}>${day}</button>`;
+  }
+  container.innerHTML = `
+    <div class="booking-calendar-toolbar">
+      <button type="button" class="agenda-nav" id="bookingPrevMonth" aria-label="Mese precedente">‹</button>
+      <div class="booking-calendar-month">${escapeHtml(monthName)}</div>
+      <button type="button" class="agenda-nav" id="bookingNextMonth" aria-label="Mese successivo">›</button>
+    </div>
+    <div class="booking-calendar-grid">${cells}</div>
+    <div class="booking-calendar-legend">Le date grigie non sono prenotabili. Il salone è chiuso il sabato e la domenica.</div>
+  `;
+  $('bookingPrevMonth').onclick = ()=>{
+    const minMonth = new Date(today()+'T12:00:00'); minMonth.setDate(1);
+    const previous = new Date(year,month-1,1);
+    if(previous >= minMonth){ bookingCalendarMonth = previous; renderBookingCalendar(); }
+  };
+  $('bookingNextMonth').onclick = ()=>{
+    bookingCalendarMonth = new Date(year,month+1,1);
+    renderBookingCalendar();
+  };
+  container.querySelectorAll('[data-booking-date]').forEach(button=>{
+    button.onclick = ()=>{
+      const key = button.dataset.bookingDate;
+      if(isDateDisabled(key)) return;
+      $('date').value = key;
+      selectedTime = '';
+      hideBookingConfirmation();
+      renderTimes();
+      updateSummary();
+      renderBookingCalendar();
+    };
+  });
+}
+
+async function loadPublicClosures(){
+  const {data,error} = await supabaseClient.rpc('get_public_salon_closures',{p_salon_id:PUBLIC_SALON_ID});
+  if(error){
+    console.error('Errore caricamento chiusure pubbliche:',error);
+    salonClosures = [];
+  }else{
+    salonClosures = data || [];
+  }
+  if(!$('date').value || isDateDisabled($('date').value)) $('date').value = nextBookableDate(today());
+  renderBookingCalendar();
+  updateSummary();
+}
+
+$('date').value = nextBookableDate(today());
 loadDefaultStaff();
+renderBookingCalendar();
+loadPublicClosures();
 
-$('date').onchange=()=>{
-
-selectedTime =
-'';
-
-hideBookingConfirmation();
-
-renderTimes();
-
-updateSummary();
-
+$('date').onchange = () => {
+  selectedTime = '';
+  hideBookingConfirmation();
+  renderTimes();
+  updateSummary();
+  renderBookingCalendar();
 };
 
 $('stylist').onchange=()=>{
@@ -1837,6 +2023,20 @@ toast(
 
 return;
 
+}
+
+// Controllo finale: non consente di inviare prenotazioni nel weekend.
+const chosenDate = $('date').value;
+const chosenDay = new Date(chosenDate + 'T12:00:00').getDay();
+
+if (chosenDay === 0 || chosenDay === 6) {
+  toast('Il sabato e la domenica non sono prenotabili. Scegli un giorno feriale.');
+  return;
+}
+
+if (isSalonClosed(chosenDate)) {
+  toast('Il salone è chiuso in questa data. Scegli un altro giorno.');
+  return;
 }
 
 btn.disabled =
@@ -2528,7 +2728,7 @@ toast(
    RENDER ADMIN
 ========================================================= */
 
-function renderAdmin(
+async function renderAdmin(
 view='agenda'
 ){
 
@@ -3294,6 +3494,92 @@ return;
 
 
 /* =========================================================
+   CHIUSURE E FERIE
+========================================================= */
+
+if(view==='closures'){
+  $('dashTitle').textContent = 'Chiusure e ferie';
+  const closuresResult = await supabaseClient
+    .from('salon_closures')
+    .select('id,start_date,end_date,reason,created_at')
+    .eq('salon_id',currentProfile.salon_id)
+    .order('start_date',{ascending:true});
+
+  if(closuresResult.error){
+    console.error('Errore caricamento chiusure:',closuresResult.error);
+    content.innerHTML = `<div class="panel">Non riesco a caricare le chiusure. Verifica di aver eseguito lo script SQL fornito.</div>`;
+    return;
+  }
+
+  const closureRows = closuresResult.data || [];
+  content.innerHTML = `
+    <div class="panel">
+      <div class="eyebrow">Pianificazione</div>
+      <h3 style="font:500 25px Georgia,serif;margin:8px 0 6px">Blocca un periodo</h3>
+      <p class="mini" style="font-size:14px;line-height:1.5">Le date inserite non saranno selezionabili dai clienti. Puoi bloccare una giornata oppure un'intera settimana.</p>
+      <div class="closure-form">
+        <div><label for="closureStart">Data inizio</label><input id="closureStart" type="date" min="${today()}" value="${today()}"></div>
+        <div><label for="closureEnd">Data fine</label><input id="closureEnd" type="date" min="${today()}" value="${today()}"></div>
+      </div>
+      <label for="closureReason">Motivo (facoltativo)</label>
+      <input id="closureReason" type="text" maxlength="120" placeholder="Es. Ferie estive">
+      <button class="primary" id="saveClosure" type="button">Salva chiusura</button>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="eyebrow">Periodi registrati</div>
+      <h3 style="font:500 25px Georgia,serif;margin:8px 0 6px">Chiusure programmate</h3>
+      ${closureRows.length ? closureRows.map(c=>`
+        <div class="closure-card">
+          <div><strong>${escapeHtml(new Date(c.start_date+'T12:00:00').toLocaleDateString('it-IT'))}${c.end_date!==c.start_date?' — '+escapeHtml(new Date(c.end_date+'T12:00:00').toLocaleDateString('it-IT')):''}</strong><small>${escapeHtml(c.reason||'Chiusura del salone')}</small></div>
+          <button type="button" class="danger-button" data-delete-closure="${escapeHtml(c.id)}">Elimina</button>
+        </div>
+      `).join('') : '<div class="customer-empty">Non hai ancora inserito periodi di chiusura.</div>'}
+    </div>
+  `;
+
+  $('closureEnd').min = $('closureStart').value;
+  $('closureStart').onchange = ()=>{
+    $('closureEnd').min = $('closureStart').value;
+    if($('closureEnd').value < $('closureStart').value) $('closureEnd').value = $('closureStart').value;
+  };
+
+  $('saveClosure').onclick = async()=>{
+    const startDate = $('closureStart').value;
+    const endDate = $('closureEnd').value;
+    const reason = $('closureReason').value.trim() || 'Chiusura del salone';
+    if(!startDate || !endDate){ toast('Inserisci la data di inizio e di fine.'); return; }
+    if(endDate < startDate){ toast('La data di fine non può precedere quella di inizio.'); return; }
+    const overlap = closureRows.some(c=>startDate<=c.end_date && endDate>=c.start_date);
+    if(overlap && !confirm('Il periodo si sovrappone a una chiusura già registrata. Vuoi aggiungerlo comunque?')) return;
+    const existingBookings = appointments.filter(a=>a.date>=startDate && a.date<=endDate && a.status!=='cancelled');
+    if(existingBookings.length && !confirm(`Attenzione: nel periodo ci sono già ${existingBookings.length} appuntamenti. La chiusura non li annullerà automaticamente. Vuoi procedere comunque?`)) return;
+    const {error} = await supabaseClient.from('salon_closures').insert({
+      salon_id:currentProfile.salon_id,
+      start_date:startDate,
+      end_date:endDate,
+      reason,
+      created_by:(await supabaseClient.auth.getUser()).data.user.id
+    });
+    if(error){ console.error('Errore salvataggio chiusura:',error); toast('Non è stato possibile salvare la chiusura. Verifica le policy e lo script SQL.'); return; }
+    await loadPublicClosures();
+    toast('Chiusura salvata: le date non sono più prenotabili.');
+    renderAdmin('closures');
+  };
+
+  content.querySelectorAll('[data-delete-closure]').forEach(button=>{
+    button.onclick = async()=>{
+      if(!confirm('Vuoi eliminare questa chiusura e rendere di nuovo prenotabili le date?')) return;
+      const {error} = await supabaseClient.from('salon_closures').delete().eq('id',button.dataset.deleteClosure).eq('salon_id',currentProfile.salon_id);
+      if(error){ console.error('Errore eliminazione chiusura:',error); toast('Non è stato possibile eliminare la chiusura.'); return; }
+      await loadPublicClosures();
+      toast('Chiusura eliminata.');
+      renderAdmin('closures');
+    };
+  });
+  return;
+}
+
+/* =========================================================
    IMPOSTAZIONI
 ========================================================= */
 
@@ -3740,6 +4026,8 @@ $('clientTab')
 loadDefaultStaff();
 
 renderTimes();
+renderBookingCalendar();
+loadPublicClosures();
 
 }
 
