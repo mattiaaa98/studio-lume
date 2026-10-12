@@ -1454,22 +1454,9 @@ const defaultStaff = [
 ];
 
 
-const slots = [
-
-'09:00',
-'09:45',
-'10:30',
-'11:15',
-'12:00',
-'14:00',
-'14:45',
-'15:30',
-'16:15',
-'17:00',
-'17:45',
-'18:30'
-
-];
+// Gli orari standard sono ogni 30 minuti. Il server aggiunge anche
+// gli orari intermedi in cui termina un appuntamento già presente.
+let availabilityRequestId = 0;
 
 
 const $ =
@@ -1686,84 +1673,71 @@ renderTimes();
    ORARI
 ========================================================= */
 
-function renderTimes(){
+async function renderTimes(){
 
-const date =
-$('date').value;
+const requestId = ++availabilityRequestId;
+const date = $('date')?.value;
+const stylistValue = $('stylist')?.value || '';
+const stylist = stylistValue.split(' · ')[0].trim();
+const container = $('times');
+if(!container) return;
 
-const stylist =
-$('stylist').value;
-
-
-/*
-  Se siamo nell'area admin abbiamo gli appuntamenti
-  caricati nel browser.
-
-  Lato cliente invece appointments è vuoto:
-  l'RPC create_public_appointment controlla comunque
-  la reale disponibilità nel database.
-*/
-
-const taken =
-appointments
-.filter(a=>
-a.date===date &&
-a.stylist===stylist &&
-a.status!=='cancelled'
-)
-.map(a=>a.time);
-
-
-$('times').innerHTML =
-slots.map(t=>{
-
-const occupied =
-taken.includes(t);
-
-return `
-
-<button
-type="button"
-class="time"
-${occupied?'disabled':''}
-data-time="${t}"
->
-${t}${occupied?' · occupato':''}
-</button>
-
-`;
-
-}).join('');
-
-
-document
-.querySelectorAll('.time')
-.forEach(button=>{
-
-button.onclick=()=>{
-
-if(button.disabled)
-return;
-
-document
-.querySelectorAll('.time')
-.forEach(x=>
-x.classList.remove('selected')
-);
-
-button.classList.add('selected');
-
-selectedTime =
-button.dataset.time;
-
-updateSummary();
-
-};
-
-});
-
+if(!date || !stylist || !selected){
+  container.innerHTML = '<p class="mini">Scegli prima servizio, data e professionista.</p>';
+  return;
 }
 
+container.innerHTML = '<p class="mini">Controllo disponibilità…</p>';
+
+const durationMinutes = parseInt(String(selected.dur || '30'), 10) || 30;
+const {data, error} = await supabaseClient.rpc(
+  'get_public_available_times',
+  {
+    p_salon_id: PUBLIC_SALON_ID,
+    p_staff_name: stylist,
+    p_date: date,
+    p_duration_minutes: durationMinutes
+  }
+);
+
+if(requestId !== availabilityRequestId) return;
+
+if(error){
+  console.error('Errore caricamento disponibilità:', error);
+  container.innerHTML = '<p class="mini">Non riesco a caricare gli orari. Riprova tra poco.</p>';
+  return;
+}
+
+const availableTimes = (data || [])
+  .map(row => String(row.slot_time || '').slice(0,5))
+  .filter(Boolean);
+
+if(!availableTimes.length){
+  container.innerHTML = '<p class="mini">Non ci sono orari disponibili per questo servizio. Prova un altro giorno o professionista.</p>';
+  selectedTime = '';
+  updateSummary();
+  return;
+}
+
+container.innerHTML = availableTimes.map(t => `
+  <button type="button" class="time" data-time="${escapeHtml(t)}">${escapeHtml(t)}</button>
+`).join('');
+
+document.querySelectorAll('#times .time').forEach(button=>{
+  button.onclick=()=>{
+    document.querySelectorAll('#times .time').forEach(x=>x.classList.remove('selected'));
+    button.classList.add('selected');
+    selectedTime = button.dataset.time;
+    updateSummary();
+  };
+});
+
+// Se un refresh rimuove l'orario scelto, azzera la selezione.
+if(selectedTime && !availableTimes.includes(selectedTime)){
+  selectedTime = '';
+  updateSummary();
+}
+}
 
 /* =========================================================
    RIEPILOGO
