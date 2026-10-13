@@ -1599,6 +1599,45 @@ ${escapeHtml(name)} · Professionista
    SERVIZI CLIENTE
 ========================================================= */
 
+async function loadPublicServices(){
+
+  const container = $('services');
+  if(container) container.innerHTML = '<p class="mini">Caricamento servizi…</p>';
+
+  const {data, error} = await supabaseClient.rpc(
+    'get_public_services',
+    {p_salon_id: PUBLIC_SALON_ID}
+  );
+
+  if(error){
+    console.error('Errore caricamento servizi pubblici:', error);
+    services = [];
+    selected = null;
+    selectedTime = '';
+    renderServices();
+    updateSummary();
+    renderTimes();
+    toast('Non riesco a caricare i servizi del salone. Riprova tra poco.');
+    return;
+  }
+
+  services = (data || []).map(s => ({
+    id: s.id,
+    name: s.name,
+    desc: s.description || 'Servizio del salone',
+    price: Number(s.price ?? 0),
+    dur: `${Number(s.duration_minutes) || 60} min`,
+    icon: s.icon || '✂️'
+  }));
+
+  selected = services[0] || null;
+  selectedTime = '';
+  renderServices();
+  updateSummary();
+  renderTimes();
+}
+
+
 function renderServices(){
 
 const container =
@@ -1611,7 +1650,7 @@ container.innerHTML =
 services.map((s,i)=>`
 
 <div
-class="service ${i===0?'selected':''}"
+class="service ${services[i]===selected?'selected':''}"
 data-i="${i}"
 >
 
@@ -1904,9 +1943,7 @@ updateSummary();
 
 };
 
-renderServices();
-
-renderTimes();
+loadPublicServices();
 
 updateSummary();
 
@@ -4151,7 +4188,7 @@ renderAdmin(
 }
 
 
-function showClient(){
+async function showClient(){
 
 $('loginView').style.display =
 'none';
@@ -4170,7 +4207,7 @@ $('clientTab')
 
 loadDefaultStaff();
 
-renderTimes();
+await loadPublicServices();
 renderBookingCalendar();
 loadPublicClosures();
 
