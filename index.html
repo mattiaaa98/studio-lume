@@ -3300,7 +3300,93 @@ id="addService"
 
 </div>
 
+<div id="serviceModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.55);padding:20px;align-items:center;justify-content:center">
+  <div class="panel" style="width:min(100%,460px);max-height:90vh;overflow:auto;background:var(--panel,#fff);padding:22px;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.22)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
+      <h3 style="margin:0">Nuovo servizio</h3>
+      <button type="button" class="ghost" id="closeServiceModal" aria-label="Chiudi">✕</button>
+    </div>
+    <label for="newServiceName" style="display:block;margin:10px 0 6px">Nome del servizio</label>
+    <input id="newServiceName" type="text" placeholder="Es. Taglio uomo" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div><label for="newServicePrice" style="display:block;margin-bottom:6px">Prezzo (€)</label><input id="newServicePrice" type="number" min="0.01" step="0.01" value="30" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit"></div>
+      <div><label for="newServiceDuration" style="display:block;margin-bottom:6px">Durata (minuti)</label><input id="newServiceDuration" type="number" min="1" step="1" value="60" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit"></div>
+    </div>
+    <div style="margin-top:16px;font-weight:600">Scegli un'emoji</div>
+    <div id="serviceEmojiChoices" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:9px">
+      ${['✂️','💈','🧔','💇','🎨','🧴','✨','🪒','🧼','💆','👑','⭐'].map((emoji,i)=>`<button type="button" data-service-emoji="${emoji}" aria-label="Emoji ${emoji}" style="font-size:24px;padding:9px 4px;border:2px solid ${i===0?'var(--accent,#b78b55)':'var(--line)'};border-radius:10px;background:${i===0?'rgba(183,139,85,.12)':'transparent'};cursor:pointer">${emoji}</button>`).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;border-radius:10px;background:rgba(127,127,127,.08)"><span style="font-size:28px" id="serviceEmojiPreview">✂️</span><span class="mini">Anteprima dell'icona del servizio</span></div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button type="button" class="ghost" id="cancelServiceCreate">Annulla</button><button type="button" class="primary" id="saveServiceCreate">Salva servizio</button></div>
+  </div>
+</div>
+
 `;
+
+
+let selectedServiceIcon = '✂️';
+const serviceModal = $('serviceModal');
+const closeServiceModal = () => { serviceModal.style.display = 'none'; };
+
+$('addService').onclick = () => {
+  selectedServiceIcon = '✂️';
+  $('newServiceName').value = '';
+  $('newServicePrice').value = '30';
+  $('newServiceDuration').value = '60';
+  $('serviceEmojiPreview').textContent = selectedServiceIcon;
+  document.querySelectorAll('[data-service-emoji]').forEach((button, i) => {
+    button.style.borderColor = i === 0 ? 'var(--accent,#b78b55)' : 'var(--line)';
+    button.style.background = i === 0 ? 'rgba(183,139,85,.12)' : 'transparent';
+  });
+  serviceModal.style.display = 'flex';
+  $('newServiceName').focus();
+};
+$('closeServiceModal').onclick = closeServiceModal;
+$('cancelServiceCreate').onclick = closeServiceModal;
+serviceModal.addEventListener('click', event => { if (event.target === serviceModal) closeServiceModal(); });
+document.querySelectorAll('[data-service-emoji]').forEach(button => {
+  button.onclick = () => {
+    selectedServiceIcon = button.dataset.serviceEmoji;
+    $('serviceEmojiPreview').textContent = selectedServiceIcon;
+    document.querySelectorAll('[data-service-emoji]').forEach(item => {
+      const selected = item === button;
+      item.style.borderColor = selected ? 'var(--accent,#b78b55)' : 'var(--line)';
+      item.style.background = selected ? 'rgba(183,139,85,.12)' : 'transparent';
+    });
+  };
+});
+$('saveServiceCreate').onclick = async () => {
+  const name = $('newServiceName').value.trim();
+  const price = Number($('newServicePrice').value);
+  const duration = Number($('newServiceDuration').value);
+  if (!name) { toast('Inserisci il nome del servizio.'); $('newServiceName').focus(); return; }
+  if (!Number.isFinite(price) || price <= 0) { toast('Inserisci un prezzo valido.'); $('newServicePrice').focus(); return; }
+  if (!Number.isInteger(duration) || duration <= 0) { toast('Inserisci una durata valida in minuti.'); $('newServiceDuration').focus(); return; }
+  if (!currentProfile?.salon_id) { toast('Salone non configurato.'); return; }
+  const saveButton = $('saveServiceCreate');
+  saveButton.disabled = true;
+  saveButton.textContent = 'Salvataggio…';
+  const { error } = await supabaseClient.from('services').insert({
+    salon_id: currentProfile.salon_id,
+    name,
+    description: 'Servizio personalizzato',
+    price,
+    duration_minutes: duration,
+    icon: selectedServiceIcon,
+    active: true
+  });
+  saveButton.disabled = false;
+  saveButton.textContent = 'Salva servizio';
+  if (error) {
+    console.error(error);
+    toast('Impossibile creare il servizio.');
+    return;
+  }
+  closeServiceModal();
+  toast('Servizio aggiunto');
+  await loadData(false);
+  renderAdmin('servicesAdmin');
+};
 
 
 document
@@ -3367,103 +3453,12 @@ renderAdmin(
 });
 
 
-$('addService').onclick =
-async()=>{
 
-const name =
-prompt(
-'Nome del servizio'
-);
-
-if(!name)
-return;
-
-const price =
-Number(
-prompt(
-'Prezzo in euro',
-'30'
-)
-);
-
-if(!price)
-return;
-
-const duration =
-Number(
-prompt(
-'Durata in minuti',
-'60'
-)
-);
-
-if(!duration)
-return;
-
-if(!currentProfile?.salon_id){
-
-toast(
-'Salone non configurato.'
-);
 
 return;
 
 }
 
-const {
-error
-} =
-await supabaseClient
-.from('services')
-.insert({
-
-salon_id:
-currentProfile.salon_id,
-
-name:
-name.trim(),
-
-description:
-'Servizio personalizzato',
-
-price:
-price,
-
-duration_minutes:
-duration,
-
-active:
-true
-
-});
-
-if(error){
-
-console.error(error);
-
-toast(
-'Impossibile creare il servizio.'
-);
-
-return;
-
-}
-
-toast(
-'Servizio aggiunto'
-);
-
-await loadData(false);
-
-renderAdmin(
-'servicesAdmin'
-);
-
-};
-
-return;
-
-}
 
 
 /* =========================================================
