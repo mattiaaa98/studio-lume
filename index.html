@@ -1823,7 +1823,7 @@ $('step2').classList.toggle(
    INIZIALIZZAZIONE CLIENTE
 ========================================================= */
 
-// Il calendario personalizzato disabilita weekend, date passate e chiusure.
+// Il calendario personalizzato disabilita date passate e chiusure del salone.
 function dateKeyFromDate(date){
   const year = date.getFullYear();
   const month = String(date.getMonth()+1).padStart(2,'0');
@@ -1833,8 +1833,6 @@ function dateKeyFromDate(date){
 
 function isSalonClosed(dateKey){
   if(!dateKey) return false;
-  const day = new Date(dateKey+'T12:00:00').getDay();
-  if(day===0 || day===6) return true;
   return salonClosures.some(c => dateKey >= c.start_date && dateKey <= c.end_date);
 }
 
@@ -1869,7 +1867,7 @@ function renderBookingCalendar(){
     const disabled = isDateDisabled(key);
     const selectedClass = $('date').value===key ? 'selected' : '';
     const closure = salonClosures.some(c=>key>=c.start_date && key<=c.end_date);
-    const reason = closure ? 'Chiuso per ferie o chiusura del salone' : ((date.getDay()===0||date.getDay()===6) ? 'Salone chiuso nel fine settimana' : '');
+    const reason = closure ? 'Chiuso per ferie o chiusura del salone' : '';
     cells += `<button type="button" class="booking-day ${selectedClass}" data-booking-date="${key}" ${disabled?'disabled':''} ${disabled&&reason?`title="${escapeHtml(reason)}"`:''}>${day}</button>`;
   }
   container.innerHTML = `
@@ -1879,7 +1877,7 @@ function renderBookingCalendar(){
       <button type="button" class="agenda-nav" id="bookingNextMonth" aria-label="Mese successivo">›</button>
     </div>
     <div class="booking-calendar-grid">${cells}</div>
-    <div class="booking-calendar-legend">Le date grigie non sono prenotabili. Il salone è chiuso il sabato e la domenica.</div>
+    <div class="booking-calendar-legend">Le date grigie non sono prenotabili. La disponibilità dipende dagli orari e dalle chiusure del salone.</div>
   `;
   $('bookingPrevMonth').onclick = ()=>{
     const minMonth = new Date(today()+'T12:00:00'); minMonth.setDate(1);
@@ -2074,14 +2072,8 @@ return;
 
 }
 
-// Controllo finale: non consente di inviare prenotazioni nel weekend.
+// Controllo finale delle chiusure straordinarie del salone.
 const chosenDate = $('date').value;
-const chosenDay = new Date(chosenDate + 'T12:00:00').getDay();
-
-if (chosenDay === 0 || chosenDay === 6) {
-  toast('Il sabato e la domenica non sono prenotabili. Scegli un giorno feriale.');
-  return;
-}
 
 if (isSalonClosed(chosenDate)) {
   toast('Il salone è chiuso in questa data. Scegli un altro giorno.');
