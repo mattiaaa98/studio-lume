@@ -843,7 +843,7 @@ table td{
 <header class="header">
 
 <div class="brand">
-<span class="brand-main">SALONI</span> <span class="brand-sub">BOOKING</span>
+<span id="brandSalonName" class="brand-main">Saloni Booking</span><span id="brandSub" class="brand-sub" style="display:none"></span>
 </div>
 
 <nav class="nav">
@@ -1396,6 +1396,33 @@ SUPABASE_KEY
 
 const PUBLIC_SALON_ID =
 '__PUBLIC_SALON_ID__';
+
+/* =========================================================
+   IDENTITÀ DINAMICA DEL SALONE
+========================================================= */
+async function loadSalonBranding(){
+  const fallbackName = 'Saloni Booking';
+  const brandName = document.getElementById('brandSalonName');
+
+  try{
+    const {data, error} = await supabaseClient.rpc(
+      'get_public_salon_name',
+      {p_salon_id: PUBLIC_SALON_ID}
+    );
+
+    if(error) throw error;
+
+    const salonName = typeof data === 'string' ? data.trim() : '';
+    const displayName = salonName || fallbackName;
+
+    if(brandName) brandName.textContent = displayName;
+    document.title = displayName + ' — Prenotazioni';
+  }catch(error){
+    console.error('Impossibile caricare il nome del salone:', error);
+    if(brandName) brandName.textContent = fallbackName;
+    document.title = fallbackName + ' — Prenotazioni';
+  }
+}
 
 
 /* =========================================================
@@ -4438,6 +4465,8 @@ showClient();
 ========================================================= */
 
 (async function initAuth(){
+
+await loadSalonBranding();
 
 loadDefaultStaff();
 
