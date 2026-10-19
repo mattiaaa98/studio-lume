@@ -3754,81 +3754,159 @@ if(view==='closures'){
 }
 
 /* =========================================================
-   IMPOSTAZIONI
+   IMPOSTAZIONI ORARI DEL SALONE
 ========================================================= */
 
 if(view==='settings'){
 
-$('dashTitle').textContent =
-'Impostazioni';
+  $('dashTitle').textContent = 'Orari di apertura';
+  content.innerHTML = '<div class="panel"><p class="mini">Caricamento degli orari…</p></div>';
 
-content.innerHTML = `
+  const salonId = currentProfile?.salon_id;
+  if(!salonId){
+    content.innerHTML = '<div class="panel"><p>Non riesco a identificare il salone associato a questo utente.</p></div>';
+    return;
+  }
 
-<div class="panel">
+  const {data: hoursRows, error: hoursError} = await supabaseClient
+    .from('business_hours')
+    .select('*')
+    .eq('salon_id', salonId)
+    .order('day_of_week');
 
-<h3 style="font:500 23px Georgia,serif">
-Configurazione salone
-</h3>
+  if(hoursError){
+    console.error('Errore lettura orari:', hoursError);
+    content.innerHTML = '<div class="panel"><p>Non riesco a leggere gli orari. Verifica le policy RLS della tabella business_hours.</p></div>';
+    return;
+  }
 
-<label>
-Nome salone
-</label>
+  const days = [
+    {id:1,label:'Lunedì'},
+    {id:2,label:'Martedì'},
+    {id:3,label:'Mercoledì'},
+    {id:4,label:'Giovedì'},
+    {id:5,label:'Venerdì'},
+    {id:6,label:'Sabato'},
+    {id:0,label:'Domenica'}
+  ];
+  const byDay = new Map((hoursRows || []).map(row => [Number(row.day_of_week), row]));
 
-<input
-id="shopName"
-value="Frank Barber Shop"
->
+  content.innerHTML = `
+    <div class="panel">
+      <div class="eyebrow">Configurazione salone</div>
+      <h3 style="font:500 25px Georgia,serif;margin:8px 0 6px">Orari di apertura</h3>
+      <p class="mini" style="font-size:14px;line-height:1.55;margin-bottom:18px">
+        Configura separatamente ogni giorno. Gli orari salvati qui verranno usati per proporre gli appuntamenti ai clienti. I giorni non configurati sono considerati chiusi finché non li salvi come aperti.
+      </p>
+      <div style="display:grid;gap:12px">
+        ${days.map(day=>{
+          const row = byDay.get(day.id) || {};
+          const isOpen = Boolean(byDay.has(day.id) && !row.closed);
+          const open = row.opens_at ? String(row.opens_at).slice(0,5) : '09:00';
+          const close = row.closes_at ? String(row.closes_at).slice(0,5) : '19:00';
+          const breakStart = row.break_start ? String(row.break_start).slice(0,5) : '';
+          const breakEnd = row.break_end ? String(row.break_end).slice(0,5) : '';
+          return `
+            <div class="panel" style="padding:14px;margin:0;background:var(--surface2)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+                <strong>${day.label}</strong>
+                <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:600">
+                  <input type="checkbox" data-hours-open="${day.id}" ${isOpen?'checked':''} style="width:auto;margin:0">
+                  Giorno aperto
+                </label>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px">
+                <div><label for="hours-open-${day.id}">Apertura</label><input id="hours-open-${day.id}" data-hours-start="${day.id}" type="time" value="${open}" ${isOpen?'':'disabled'}></div>
+                <div><label for="hours-close-${day.id}">Chiusura</label><input id="hours-close-${day.id}" data-hours-end="${day.id}" type="time" value="${close}" ${isOpen?'':'disabled'}></div>
+                <div><label for="hours-break-start-${day.id}">Inizio pausa (facoltativo)</label><input id="hours-break-start-${day.id}" data-hours-break-start="${day.id}" type="time" value="${breakStart}" ${isOpen?'':'disabled'}></div>
+                <div><label for="hours-break-end-${day.id}">Fine pausa (facoltativo)</label><input id="hours-break-end-${day.id}" data-hours-break-end="${day.id}" type="time" value="${breakEnd}" ${isOpen?'':'disabled'}></div>
+              </div>
+              <p class="mini" style="margin:8px 0 0">Lascia vuoti entrambi i campi della pausa se non vuoi bloccare una pausa pranzo.</p>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <button class="primary" id="saveBusinessHours" type="button" style="margin-top:18px">Salva orari</button>
+      <p class="mini" style="margin-top:10px">Nota: gli appuntamenti già confermati non vengono spostati o cancellati quando cambi gli orari.</p>
+    </div>
+  `;
 
-<label>
-Orario apertura
-</label>
+  content.querySelectorAll('[data-hours-open]').forEach(toggle=>{
+    toggle.addEventListener('change', ()=>{
+      const dayId = toggle.dataset.hoursOpen;
+      content.querySelectorAll(`[data-hours-start="${dayId}"],[data-hours-end="${dayId}"],[data-hours-break-start="${dayId}"],[data-hours-break-end="${dayId}"]`).forEach(input=>{
+        input.disabled = !toggle.checked;
+      });
+    });
+  });
 
-<input
-value="09:00 — 19:00"
->
+  $('saveBusinessHours').onclick = async()=>{
+    const button = $('saveBusinessHours');
+    button.disabled = true;
+    button.textContent = 'Salvataggio…';
+    try{
+      const records = [];
+      for(const day of days){
+        const openToggle = content.querySelector(`[data-hours-open="${day.id}"]`);
+        const isOpen = openToggle.checked;
+        const opensAt = content.querySelector(`[data-hours-start="${day.id}"]`).value;
+        const closesAt = content.querySelector(`[data-hours-end="${day.id}"]`).value;
+        const breakStart = content.querySelector(`[data-hours-break-start="${day.id}"]`).value || null;
+        const breakEnd = content.querySelector(`[data-hours-break-end="${day.id}"]`).value || null;
 
-<label>
-Durata slot standard
-</label>
+        if(isOpen){
+          if(!opensAt || !closesAt || opensAt >= closesAt){
+            throw new Error(`Controlla gli orari di apertura e chiusura: ${day.label}.`);
+          }
+          if(Boolean(breakStart) !== Boolean(breakEnd)){
+            throw new Error(`Per la pausa di ${day.label} inserisci sia l'inizio sia la fine.`);
+          }
+          if(breakStart && (breakStart >= breakEnd || breakStart < opensAt || breakEnd > closesAt)){
+            throw new Error(`La pausa di ${day.label} deve essere compresa tra apertura e chiusura.`);
+          }
+        }
 
-<select>
+        records.push({
+          day,
+          payload:{
+            salon_id:salonId,
+            day_of_week:day.id,
+            opens_at:opensAt || '09:00',
+            closes_at:closesAt || '19:00',
+            closed:!isOpen,
+            break_start:isOpen ? breakStart : null,
+            break_end:isOpen ? breakEnd : null
+          }
+        });
+      }
 
-<option>
-15 minuti
-</option>
+      // Aggiorna la riga esistente oppure crea quella mancante per il giorno.
+      for(const item of records){
+        const existing = byDay.get(item.day.id);
+        let result;
+        if(existing?.id){
+          result = await supabaseClient.from('business_hours')
+            .update(item.payload)
+            .eq('id', existing.id)
+            .eq('salon_id', salonId);
+        }else{
+          result = await supabaseClient.from('business_hours').insert(item.payload);
+        }
+        if(result.error) throw result.error;
+      }
 
-<option selected>
-30 minuti
-</option>
+      toast('Orari e pause salvati.');
+      await renderAdmin('settings');
+    }catch(error){
+      console.error('Errore salvataggio orari:', error);
+      toast(error?.message || 'Non è stato possibile salvare gli orari.');
+    }finally{
+      const currentButton = $('saveBusinessHours');
+      if(currentButton){ currentButton.disabled = false; currentButton.textContent = 'Salva orari'; }
+    }
+  };
 
-<option>
-45 minuti
-</option>
-
-</select>
-
-<button
-class="primary"
-id="saveSettings"
->
-Salva impostazioni
-</button>
-
-</div>
-
-`;
-
-$('saveSettings').onclick =
-()=>{
-
-toast(
-'Impostazioni salvate.'
-);
-
-};
-
-return;
-
+  return;
 }
 
 }
