@@ -813,6 +813,23 @@ table td{
   }
 }
 
+
+/* AGENDA OPERATIVA E DETTAGLIO APPUNTAMENTI */
+.agenda-view-switch{display:flex;gap:6px;flex-wrap:wrap}
+.agenda-view-btn{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:750}
+.agenda-view-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.agenda-day-list{display:grid;gap:12px}.agenda-day-group{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--surface)}
+.agenda-day-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;font-weight:800;text-transform:capitalize}
+.agenda-item{display:grid;grid-template-columns:105px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px 10px;border-top:1px solid var(--line);cursor:pointer}.agenda-item:hover{background:var(--surface2)}
+.agenda-item-time{font-weight:800;font-size:15px}.agenda-item-title{font-weight:800}.agenda-item-info{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
+.status-pill{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:var(--surface2);font-size:11px;font-weight:800;white-space:nowrap}
+.status-confirmed{background:#e8f5ed;color:#28734a}.status-completed{background:#e8f0fb;color:#174a8b}.status-cancelled{background:#fae9e7;color:#a33a32}.status-no_show{background:#fff2dc;color:#8a5a12}
+.appointment-modal-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:18px}
+.appointment-modal{width:min(100%,680px);max-height:92vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 20px 70px #0003}
+.appointment-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.appointment-modal-grid label{margin:0 0 6px}.appointment-modal-grid input,.appointment-modal-grid select,.appointment-modal-grid textarea{width:100%;min-width:0}
+.appointment-modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}.appointment-modal-actions button{width:auto;margin-top:0}
+.client-row{cursor:pointer}.client-row:hover{background:var(--surface2)}.client-history-row{display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:10px;padding:11px 0;border-top:1px solid var(--line);align-items:center;font-size:13px}
+@media(max-width:650px){.agenda-item{grid-template-columns:78px minmax(0,1fr);gap:8px}.agenda-item>.status-pill{grid-column:2;justify-self:start}.appointment-modal-grid{grid-template-columns:1fr}.client-history-row{grid-template-columns:1fr 1fr}.agenda-view-switch{width:100%}}
 /* STATISTICHE E PAGAMENTI */
 .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
 .stats-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;min-width:0}
@@ -1529,6 +1546,7 @@ let services =
 defaultServices;
 
 let appointments = [];
+let staffMembers = [];
 
 let currentProfile =
 null;
@@ -2841,6 +2859,33 @@ if(view==='agenda'){
 $('dashTitle').textContent =
 'Agenda del salone';
 
+if(!window.agendaMode) window.agendaMode='month';
+if(!window.agendaDate) window.agendaDate=new Date();
+if(window.agendaMode==='day'||window.agendaMode==='week'){
+  const mode=window.agendaMode,anchorDate=new Date(window.agendaDate);anchorDate.setHours(12,0,0,0);
+  const rangeStart=new Date(anchorDate);if(mode==='week')rangeStart.setDate(rangeStart.getDate()-((rangeStart.getDay()+6)%7));
+  const rangeEnd=new Date(rangeStart);rangeEnd.setDate(rangeEnd.getDate()+(mode==='week'?6:0));
+  const fromKey=romeDateKey(rangeStart),toKey=romeDateKey(rangeEnd);
+  const title=mode==='day'?new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Rome'}).format(anchorDate):new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',timeZone:'Europe/Rome'}).format(rangeStart)+' — '+new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Rome'}).format(rangeEnd);
+  const days=[];for(let d=new Date(rangeStart);d<=rangeEnd;d.setDate(d.getDate()+1))days.push({date:new Date(d),key:romeDateKey(d)});
+  const rangeAppointments=appointments.filter(a=>a.date>=fromKey&&a.date<=toKey).sort((a,b)=>(a.starts_at||'').localeCompare(b.starts_at||''));
+  let listHtml='';
+  days.forEach(day=>{
+    const dayAppointments=rangeAppointments.filter(a=>a.date===day.key);
+    listHtml+='<section class="agenda-day-group"><div class="agenda-day-heading"><span>'+escapeHtml(new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Rome'}).format(day.date))+'</span><span class="mini">'+dayAppointments.length+(dayAppointments.length===1?' appuntamento':' appuntamenti')+'</span></div>';
+    if(!dayAppointments.length)listHtml+='<div class="customer-empty">Nessun appuntamento.</div>';
+    else dayAppointments.forEach(a=>{listHtml+='<div class="agenda-item" role="button" tabindex="0" data-appointment="'+escapeHtml(a.id)+'"><div class="agenda-item-time">'+escapeHtml(formatAppointmentTime(a.starts_at))+'<div class="mini">— '+escapeHtml(formatAppointmentTime(a.ends_at))+'</div></div><div><div class="agenda-item-title">'+escapeHtml(a.name)+'</div><div class="agenda-item-info">'+escapeHtml(a.service)+' · '+escapeHtml(a.stylist||'Professionista')+'<br>'+(a.phone?'<a href="tel:'+escapeHtml(a.phone)+'" onclick="event.stopPropagation()">'+escapeHtml(a.phone)+'</a>':'Telefono non disponibile')+'</div></div><span class="status-pill status-'+escapeHtml(a.status||'')+'">'+escapeHtml(appointmentStatusLabel(a.status))+'</span></div>';});
+    listHtml+='</section>';
+  });
+  content.innerHTML='<div class="agenda-toolbar"><div class="agenda-toolbar-left"><button class="agenda-nav" id="agendaPrev" title="Periodo precedente">‹</button><div class="month-title">'+escapeHtml(title)+'</div><button class="agenda-nav" id="agendaNext" title="Periodo successivo">›</button></div><div class="agenda-toolbar-right"><div class="agenda-view-switch"><button type="button" class="agenda-view-btn '+(mode==='day'?'active':'')+'" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn '+(mode==='week'?'active':'')+'" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="agendaToday">Oggi</button></div></div><div class="agenda-summary"><strong>'+rangeAppointments.length+'</strong> appuntamenti nel periodo · seleziona una scheda per vedere o modificare i dettagli.</div><div class="agenda-day-list">'+listHtml+'</div>';
+  document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;renderAdmin('agenda');};});
+  $('agendaPrev').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()-(mode==='week'?7:1));renderAdmin('agenda');};
+  $('agendaNext').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()+(mode==='week'?7:1));renderAdmin('agenda');};
+  $('agendaToday').onclick=()=>{window.agendaDate=new Date();renderAdmin('agenda');};
+  content.querySelectorAll('[data-appointment]').forEach(card=>{const open=()=>{const a=appointments.find(item=>item.id===card.dataset.appointment);if(a)openAppointmentDetails(a);};card.onclick=open;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
+  return;
+}
+
 if(!window.agendaMonth){
 
 window.agendaMonth =
@@ -2966,16 +3011,7 @@ title="Mese successivo"
 
 </div>
 
-<div class="agenda-toolbar-right">
-
-<button
-class="agenda-today"
-id="todayMonth"
->
-Oggi
-</button>
-
-</div>
+<div class="agenda-toolbar-right"><div class="agenda-view-switch" aria-label="Vista agenda"><button type="button" class="agenda-view-btn ${window.agendaMode==='day'?'active':''}" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn ${window.agendaMode==='week'?'active':''}" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn ${window.agendaMode==='month'?'active':''}" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="todayMonth">Oggi</button></div>
 
 </div>
 
@@ -3066,8 +3102,7 @@ dateKey===todayKey;
 const list =
 appointments
 .filter(a=>
-a.date===dateKey &&
-a.status!=='cancelled'
+a.date===dateKey
 )
 .sort(
 (a,b)=>
@@ -3123,7 +3158,7 @@ ${escapeHtml(a.service)}
 </div>
 
 <span class="mini">
-${escapeHtml(a.stylist||'Professionista')}
+${escapeHtml(a.stylist||'Professionista')} · ${escapeHtml(appointmentStatusLabel(a.status))}
 </span>
 
 </div>
@@ -3150,37 +3185,21 @@ Nessun appuntamento
 `;
 
 
+/* CAMBIO VISTA GIORNO / SETTIMANA / MESE */
+document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;window.agendaDate=new Date();window.agendaMonth=new Date();window.agendaMonth.setDate(1);renderAdmin('agenda');};});
 /* NAVIGAZIONE MESI */
 
 $('prevMonth').onclick =
 ()=>{
 
-window.agendaMonth =
-new Date(
-year,
-month-1,
-1
-);
-
-renderAdmin(
-'agenda'
-);
+window.agendaMode='month';window.agendaMonth=new Date(year,month-1,1);window.agendaDate=new Date(year,month-1,1);renderAdmin('agenda');
 
 };
 
 $('nextMonth').onclick =
 ()=>{
 
-window.agendaMonth =
-new Date(
-year,
-month+1,
-1
-);
-
-renderAdmin(
-'agenda'
-);
+window.agendaMode='month';window.agendaMonth=new Date(year,month+1,1);window.agendaDate=new Date(year,month+1,1);renderAdmin('agenda');
 
 };
 
@@ -3190,16 +3209,7 @@ $('todayMonth').onclick =
 const now =
 new Date();
 
-window.agendaMonth =
-new Date(
-now.getFullYear(),
-now.getMonth(),
-1
-);
-
-renderAdmin(
-'agenda'
-);
+window.agendaMode='month';window.agendaDate=now;window.agendaMonth=new Date(now.getFullYear(),now.getMonth(),1);renderAdmin('agenda');
 
 };
 
@@ -3223,27 +3233,7 @@ card.dataset.appointment
 if(!appointment)
 return;
 
-const message =
-`Cliente: ${appointment.name}
-Telefono: ${appointment.phone||'—'}
-Servizio: ${appointment.service}
-Data: ${appointment.date}
-Orario: ${appointment.time}
-Professionista: ${appointment.stylist||'—'}
-Stato: ${appointment.status}
-
-Vuoi annullare questo appuntamento?`;
-
-if(
-appointment.status==='confirmed' &&
-confirm(message)
-){
-
-cancelAppointment(
-appointment.id
-);
-
-}
+openAppointmentDetails(appointment);
 
 };
 
@@ -4011,9 +4001,9 @@ supabaseClient
 .from('appointments')
 .select(`
 *,
-customers(name,phone),
-staff(name),
-services(name,price,duration_minutes)
+customers(id,name,phone,email,notes),
+staff(id,name),
+services(id,name,price,duration_minutes)
 `)
 .eq(
 'salon_id',
@@ -4139,6 +4129,13 @@ return {
 id:
 x.id,
 
+customer_id:x.customer_id,
+staff_id:x.staff_id,
+service_id:x.service_id,
+notes:x.notes || '',
+customer_email:x.customers?.email || '',
+customer_notes:x.customers?.notes || '',
+
 date:
 date,
 
@@ -4185,6 +4182,8 @@ x.ends_at
 
 
 /* PROFESSIONISTI */
+
+staffMembers = staffResult.data || [];
 
 $('stylist').innerHTML =
 staffResult.data
