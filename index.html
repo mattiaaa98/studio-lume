@@ -2810,6 +2810,50 @@ toast(
 }
 
 
+function appointmentStatusLabel(status){
+  const labels={confirmed:'Confermato',completed:'Completato',cancelled:'Annullato',no_show:'Assente',pending:'In attesa'};
+  return labels[status]||status||'Da definire';
+}
+function formatAppointmentDate(value){if(!value)return '—';return new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(value));}
+function formatAppointmentTime(value){if(!value)return '—';return new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(value));}
+function formatRomeDateTimeLocal(value){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value));
+  const p={};parts.forEach(x=>{if(x.type!=='literal')p[x.type]=x.value;});return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
+}
+function romeLocalDateTimeToISO(value){
+  const parts=value.split('T');if(parts.length!==2)throw new Error('Inserisci data e ora valide.');
+  const date=parts[0].split('-').map(Number),time=parts[1].split(':').map(Number),guess=Date.UTC(date[0],date[1]-1,date[2],time[0],time[1]);
+  const formatted=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess));
+  const p={};formatted.forEach(x=>{if(x.type!=='literal')p[x.type]=Number(x.value);});
+  const localAsUtc=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute),offsetMinutes=(localAsUtc-guess)/60000;
+  return new Date(guess-offsetMinutes*60000).toISOString();
+}
+async function openAppointmentDetails(appointment){
+  if(!appointment)return;
+  document.getElementById('appointmentModalBackdrop')?.remove();
+  const serviceOptions=services.map(s=>'<option value="'+escapeHtml(s.id)+'" '+(s.id===appointment.service_id?'selected':'')+'>'+escapeHtml(s.name)+' · € '+Number(s.price).toFixed(2).replace('.',',')+' · '+escapeHtml(s.dur)+'</option>');
+  if(appointment.service_id&&!services.some(s=>s.id===appointment.service_id))serviceOptions.push('<option value="'+escapeHtml(appointment.service_id)+'" selected>'+escapeHtml(appointment.service)+' (servizio non attivo)</option>');
+  const staffOptions=staffMembers.map(s=>'<option value="'+escapeHtml(s.id)+'" '+(s.id===appointment.staff_id?'selected':'')+'>'+escapeHtml(s.name)+'</option>');
+  if(appointment.staff_id&&!staffMembers.some(s=>s.id===appointment.staff_id))staffOptions.push('<option value="'+escapeHtml(appointment.staff_id)+'" selected>'+escapeHtml(appointment.stylist||'Professionista non attivo')+'</option>');
+  const backdrop=document.createElement('div');backdrop.id='appointmentModalBackdrop';backdrop.className='appointment-modal-backdrop';
+  backdrop.innerHTML='<div class="appointment-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentModalTitle"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px"><div><div class="eyebrow">Agenda del salone</div><h3 id="appointmentModalTitle" style="font:500 27px Georgia,serif;margin:8px 0 6px">Dettaglio appuntamento</h3><div class="mini">'+escapeHtml(appointmentStatusLabel(appointment.status))+'</div></div><button type="button" class="agenda-nav" id="closeAppointmentModal" aria-label="Chiudi">×</button></div><div class="appointment-modal-grid" style="margin-top:18px"><div><label for="editCustomerName">Nome cliente</label><input id="editCustomerName" maxlength="120" value="'+escapeHtml(appointment.name)+'" required></div><div><label for="editCustomerPhone">Telefono</label><input id="editCustomerPhone" maxlength="40" value="'+escapeHtml(appointment.phone||'')+'" inputmode="tel" required></div><div><label for="editService">Servizio</label><select id="editService">'+serviceOptions.join('')+'</select></div><div><label for="editStaff">Professionista</label><select id="editStaff">'+staffOptions.join('')+'</select></div><div><label for="editStart">Data e ora di inizio</label><input id="editStart" type="datetime-local" value="'+escapeHtml(formatRomeDateTimeLocal(appointment.starts_at))+'" required></div><div><label for="editStatus">Stato</label><select id="editStatus"><option value="confirmed">Confermato</option><option value="completed">Completato</option><option value="cancelled">Annullato</option><option value="no_show">Assente</option><option value="pending">In attesa</option></select></div><div style="grid-column:1/-1"><label for="editNotes">Note (facoltative)</label><textarea id="editNotes" rows="2" maxlength="1000">'+escapeHtml(appointment.notes||'')+'</textarea></div></div><div class="mini" style="margin-top:12px">Durata e prezzo vengono aggiornati automaticamente in base al servizio scelto. Il sistema impedisce di salvare orari sovrapposti per lo stesso professionista.</div><div class="appointment-modal-actions"><button type="button" class="ghost" id="closeAppointmentModalBottom">Chiudi</button><button type="button" class="primary" id="saveAppointmentChanges">Salva modifiche</button></div><div id="appointmentEditError" class="mini" role="alert" style="color:#a33a32;margin-top:8px"></div></div>';
+  document.body.appendChild(backdrop);$('editStatus').value=appointment.status||'confirmed';
+  const close=()=>backdrop.remove();$('closeAppointmentModal').onclick=close;$('closeAppointmentModalBottom').onclick=close;backdrop.addEventListener('click',e=>{if(e.target===backdrop)close();});
+  $('saveAppointmentChanges').onclick=async()=>{
+    const button=$('saveAppointmentChanges'),errorBox=$('appointmentEditError');button.disabled=true;button.textContent='Salvataggio…';errorBox.textContent='';
+    try{
+      const serviceId=$('editService').value,staffId=$('editStaff').value,name=$('editCustomerName').value.trim(),phone=$('editCustomerPhone').value.trim(),startsAt=romeLocalDateTimeToISO($('editStart').value);
+      if(!name||!phone||!serviceId||!staffId)throw new Error('Compila nome, telefono, servizio e professionista.');
+      const {data,error}=await supabaseClient.rpc('update_admin_appointment',{p_appointment_id:appointment.id,p_customer_name:name,p_customer_phone:phone,p_staff_id:staffId,p_service_id:serviceId,p_starts_at:startsAt,p_status:$('editStatus').value,p_notes:$('editNotes').value.trim()||null});
+      if(error)throw error;if(!data||data.success!==true)throw new Error('Il database non ha confermato il salvataggio.');
+      close();toast('Appuntamento aggiornato.');await loadData(false);renderAdmin(window.currentAdminView||'agenda');
+    }catch(error){
+      console.error('Errore aggiornamento appuntamento:',error);const message=String(error?.message||'Errore sconosciuto');
+      errorBox.textContent=/exclusion|overlap|23P01|appointments_no_overlap/i.test(message)?'Conflitto: questo professionista ha già un appuntamento in quell’orario. Scegli un altro orario.':message;
+    }finally{if($('saveAppointmentChanges')){$('saveAppointmentChanges').disabled=false;$('saveAppointmentChanges').textContent='Salva modifiche';}}
+  };
+}
+
 /* =========================================================
    RENDER ADMIN
 ========================================================= */
@@ -2817,7 +2861,7 @@ toast(
 async function renderAdmin(
 view='agenda'
 ){
-
+window.currentAdminView=view;
 const content =
 $('adminContent');
 
@@ -3476,75 +3520,29 @@ return;
 
 if(view==='clients'){
 
-$('dashTitle').textContent =
-'Clienti';
-
-const clients = [
-...new Map(
-appointments
-.filter(a=>a.status!=='cancelled')
-.map(a=>[a.phone,a])
-).values()
-];
-
-content.innerHTML = `
-
-<div class="panel">
-
-<div style="overflow:auto">
-
-<table
-style="width:100%;border-collapse:collapse"
->
-
-<tr>
-
-<th style="text-align:left;padding:10px">
-Cliente
-</th>
-
-<th style="text-align:left;padding:10px">
-Telefono
-</th>
-
-<th style="text-align:left;padding:10px">
-Ultimo servizio
-</th>
-
-</tr>
-
-${clients.map(c=>`
-
-<tr>
-
-<td style="padding:10px;border-top:1px solid var(--line)">
-${escapeHtml(c.name)}
-</td>
-
-<td style="padding:10px;border-top:1px solid var(--line)">
-${escapeHtml(c.phone)}
-</td>
-
-<td style="padding:10px;border-top:1px solid var(--line)">
-${escapeHtml(c.service)}
-</td>
-
-</tr>
-
-`).join('')}
-
-</table>
-
-</div>
-
-</div>
-
-`;
-
-return;
+$('dashTitle').textContent='Clienti';
+const latestByCustomer=new Map();
+appointments.forEach(a=>{const key=a.customer_id||a.phone||a.name;const existing=latestByCustomer.get(key);if(!existing||String(a.starts_at||'')>String(existing.starts_at||''))latestByCustomer.set(key,a);});
+const clients=[...latestByCustomer.values()].sort((a,b)=>String(a.name).localeCompare(String(b.name),'it'));
+content.innerHTML='<div class="panel"><div class="eyebrow">Anagrafica</div><h3 style="font:500 25px Georgia,serif;margin:8px 0 12px">Clienti e storico</h3><label for="clientSearch">Cerca per nome o telefono</label><input id="clientSearch" type="search" placeholder="Es. Mario o 333…"><div style="overflow:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:10px">Cliente</th><th style="text-align:left;padding:10px">Telefono</th><th style="text-align:left;padding:10px">Ultimo appuntamento</th><th style="text-align:left;padding:10px">Storico</th></tr></thead><tbody id="clientsTableBody"></tbody></table></div></div><div id="clientHistoryPanel" style="margin-top:16px"></div>';
+const renderClients=()=>{
+  const query=$('clientSearch').value.trim().toLocaleLowerCase('it');
+  const filtered=clients.filter(client=>(client.name||'').toLocaleLowerCase('it').includes(query)||(client.phone||'').toLocaleLowerCase('it').includes(query));
+  $('clientsTableBody').innerHTML=filtered.map(client=>{
+    const count=appointments.filter(a=>(a.customer_id||a.phone||a.name)===(client.customer_id||client.phone||client.name)).length;
+    return '<tr class="client-row" data-client-id="'+escapeHtml(client.customer_id||'')+'" data-client-phone="'+escapeHtml(client.phone||'')+'"><td style="padding:11px 10px;border-top:1px solid var(--line)">'+escapeHtml(client.name)+'</td><td style="padding:11px 10px;border-top:1px solid var(--line)">'+(client.phone?'<a href="tel:'+escapeHtml(client.phone)+'" onclick="event.stopPropagation()">'+escapeHtml(client.phone)+'</a>':'—')+'</td><td style="padding:11px 10px;border-top:1px solid var(--line)">'+escapeHtml(formatAppointmentDate(client.starts_at))+'</td><td style="padding:11px 10px;border-top:1px solid var(--line)">'+count+' app.</td></tr>';
+  }).join('')||'<tr><td colspan="4" style="padding:14px">Nessun cliente trovato.</td></tr>';
+  content.querySelectorAll('[data-client-phone]').forEach(row=>{row.onclick=()=>{const client=clients.find(x=>(x.customer_id||'')===row.dataset.clientId&&(x.phone||'')===row.dataset.clientPhone);if(client)renderClientHistory(client);};});
+};
+const renderClientHistory=client=>{
+  const key=client.customer_id||client.phone||client.name;
+  const history=appointments.filter(a=>(a.customer_id||a.phone||a.name)===key).sort((a,b)=>String(b.starts_at||'').localeCompare(String(a.starts_at||'')));
+  $('clientHistoryPanel').innerHTML='<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div class="eyebrow">Scheda cliente</div><h3 style="font:500 25px Georgia,serif;margin:8px 0">'+escapeHtml(client.name)+'</h3><div class="mini">'+(client.phone?'<a href="tel:'+escapeHtml(client.phone)+'">'+escapeHtml(client.phone)+'</a>':'Telefono non disponibile')+(client.customer_email?'<br>'+escapeHtml(client.customer_email):'')+'</div></div><span class="status-pill">'+history.length+' appuntamenti</span></div><h4 style="margin:22px 0 8px">Storico appuntamenti</h4>'+(history.length?history.map(a=>'<div class="client-history-row"><div><strong>'+escapeHtml(formatAppointmentDate(a.starts_at))+'</strong><div class="mini">'+escapeHtml(formatAppointmentTime(a.starts_at))+'–'+escapeHtml(formatAppointmentTime(a.ends_at))+'</div></div><div>'+escapeHtml(a.service)+'<div class="mini">'+escapeHtml(a.stylist||'Professionista')+'</div></div><div><span class="status-pill status-'+escapeHtml(a.status||'')+'">'+escapeHtml(appointmentStatusLabel(a.status))+'</span></div><button type="button" class="stats-small-btn" data-history-appointment="'+escapeHtml(a.id)+'">Apri</button></div>').join(''):'<div class="customer-empty">Nessun appuntamento registrato.</div>')+'</div>';
+  $('clientHistoryPanel').querySelectorAll('[data-history-appointment]').forEach(button=>{button.onclick=()=>{const a=appointments.find(item=>item.id===button.dataset.historyAppointment);if(a)openAppointmentDetails(a);};});
+};
+$('clientSearch').oninput=renderClients;renderClients();return;
 
 }
-
 
 /* =========================================================
    STATISTICHE, INCASSI, COSTI E PAGAMENTI
