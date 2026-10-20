@@ -2922,7 +2922,7 @@ if(window.agendaMode==='day'||window.agendaMode==='week'){
     listHtml+='</section>';
   });
   content.innerHTML='<div class="agenda-toolbar"><div class="agenda-toolbar-left"><button class="agenda-nav" id="agendaPrev" title="Periodo precedente">‹</button><div class="month-title">'+escapeHtml(title)+'</div><button class="agenda-nav" id="agendaNext" title="Periodo successivo">›</button></div><div class="agenda-toolbar-right"><div class="agenda-view-switch"><button type="button" class="agenda-view-btn '+(mode==='day'?'active':'')+'" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn '+(mode==='week'?'active':'')+'" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="agendaToday">Oggi</button></div></div><div class="agenda-summary"><strong>'+rangeAppointments.length+'</strong> appuntamenti nel periodo · seleziona una scheda per vedere o modificare i dettagli.</div><div class="agenda-day-list">'+listHtml+'</div>';
-  document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;renderAdmin('agenda');};});
+  document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;if(window.agendaMode==='month'){window.agendaMonth=new Date(window.agendaDate||new Date());window.agendaMonth.setDate(1);}renderAdmin('agenda');};});
   $('agendaPrev').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()-(mode==='week'?7:1));renderAdmin('agenda');};
   $('agendaNext').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()+(mode==='week'?7:1));renderAdmin('agenda');};
   $('agendaToday').onclick=()=>{window.agendaDate=new Date();renderAdmin('agenda');};
@@ -3020,8 +3020,7 @@ a.date.split('-');
 
 return(
 Number(parts[0])===year &&
-Number(parts[1])===month+1 &&
-a.status!=='cancelled'
+Number(parts[1])===month+1
 );
 
 });
