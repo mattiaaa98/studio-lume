@@ -1075,7 +1075,21 @@ id="phone"
 placeholder="333 123 4567"
 inputmode="tel"
 autocomplete="tel"
+required
 >
+
+<label for="email">
+Email (facoltativa)
+</label>
+
+<input
+id="email"
+type="email"
+placeholder="nome@esempio.it"
+autocomplete="email"
+>
+
+<p class="mini" style="margin-top:8px">Inserisci l'email per ricevere la conferma e, se configurato, il promemoria dell'appuntamento.</p>
 
 <button
 class="primary"
@@ -2155,6 +2169,9 @@ name,
 p_customer_phone:
 phone,
 
+p_customer_email:
+$('email').value.trim() || null,
+
 p_staff_name:
 staffName,
 
@@ -2202,6 +2219,9 @@ $('name').value =
 '';
 
 $('phone').value =
+'';
+
+$('email').value =
 '';
 
 
