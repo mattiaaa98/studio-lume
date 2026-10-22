@@ -1425,8 +1425,14 @@ SUPABASE_URL,
 SUPABASE_KEY
 );
 
+// Un unico deployment può servire più saloni tramite ?salon=UUID.
+// PUBLIC_SALON_ID compilato da Vercel resta il fallback per il link principale.
+const salonIdFromUrl = new URLSearchParams(window.location.search).get('salon');
+const validSalonUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PUBLIC_SALON_ID =
-'__PUBLIC_SALON_ID__';
+  salonIdFromUrl && validSalonUuid.test(salonIdFromUrl)
+    ? salonIdFromUrl
+    : '__PUBLIC_SALON_ID__';
 
 /* =========================================================
    IDENTITÀ DINAMICA DEL SALONE
