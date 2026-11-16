@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -9,25 +8,31 @@ if (!salonId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
   process.exit(1);
 }
 
-const sourcePath = path.join(__dirname, 'index.html');
 const outputDir = path.join(__dirname, 'dist');
-const outputPath = path.join(outputDir, 'index.html');
-
-if (!fs.existsSync(sourcePath)) {
-  console.error('Errore: index.html non trovato.');
-  process.exit(1);
-}
-
-let html = fs.readFileSync(sourcePath, 'utf8');
-
-if (!html.includes('__PUBLIC_SALON_ID__')) {
-  console.error('Errore: placeholder __PUBLIC_SALON_ID__ non trovato in index.html.');
-  process.exit(1);
-}
-
-html = html.replaceAll('__PUBLIC_SALON_ID__', salonId);
+const files = [
+  { source: 'index.html', output: 'index.html', replaceSalonId: true },
+  { source: 'admin.html', output: 'admin.html', replaceSalonId: false },
+];
 
 fs.mkdirSync(outputDir, { recursive: true });
-fs.writeFileSync(outputPath, html, 'utf8');
 
-console.log('Build completata per il salone:', salonId);
+for (const file of files) {
+  const sourcePath = path.join(__dirname, file.source);
+  if (!fs.existsSync(sourcePath)) {
+    console.error('Errore: file non trovato:', file.source);
+    process.exit(1);
+  }
+
+  let content = fs.readFileSync(sourcePath, 'utf8');
+  if (file.replaceSalonId) {
+    if (!content.includes('__PUBLIC_SALON_ID__')) {
+      console.error('Errore: placeholder __PUBLIC_SALON_ID__ non trovato in index.html.');
+      process.exit(1);
+    }
+    content = content.replaceAll('__PUBLIC_SALON_ID__', salonId);
+  }
+
+  fs.writeFileSync(path.join(outputDir, file.output), content, 'utf8');
+}
+
+console.log('Build completata per il salone:', salonId, '(index.html + admin.html)');
