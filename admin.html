@@ -146,8 +146,12 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
         if (fullName === null) return;
         invite.disabled = true; invite.textContent = "Invio…";
         try {
-          await adminRequest("invite_owner", { salon_id: salon.id, email, full_name: fullName });
-          message($("appMessage"), "Invito inviato a " + email + ". Il titolare potrà impostare la password dal link ricevuto.");
+          const result = await adminRequest("invite_owner", { salon_id: salon.id, email, full_name: fullName });
+          if (result.already_registered) {
+            message($("appMessage"), "Account esistente: " + email + " è stato associato anche a " + salon.name + ". Può accedere con la password già utilizzata.");
+          } else {
+            message($("appMessage"), "Invito inviato a " + email + ". Il titolare potrà impostare la password dal link ricevuto.");
+          }
         } catch (error) { message($("appMessage"), error.message, true); }
         finally { invite.disabled = false; invite.textContent = "Invita titolare"; }
       });
