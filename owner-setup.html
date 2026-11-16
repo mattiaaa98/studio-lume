@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Attiva il tuo account — Saloni Booking</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:light;--ink:#18211f;--muted:#718079;--line:#e5eae6;--paper:#f5f7f4;--green:#234d3c;--green2:#e8f0eb;--red:#a13d37}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+.card{width:min(100%,460px);background:#fff;border:1px solid var(--line);border-radius:18px;padding:34px;box-shadow:0 18px 50px #0000000a}
+.logo{font:500 25px Georgia,serif;margin-bottom:26px}.logo span{color:#c49a5a}
+.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c49a5a;font-weight:700}
+h1{font:500 32px Georgia,serif;margin:9px 0 10px}p{color:var(--muted);font-size:14px;line-height:1.6}
+label{display:block;font-size:12px;color:var(--muted);margin:18px 0 7px}
+input{width:100%;padding:13px;border:1px solid var(--line);border-radius:9px;font:inherit}
+button{width:100%;border:0;border-radius:9px;padding:14px;margin-top:20px;background:var(--green);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.notice{padding:12px 14px;border-radius:9px;background:var(--green2);color:var(--green);font-size:13px;margin-top:15px}.notice.error{background:#f8eae8;color:var(--red)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="logo">Saloni<span>.</span>Booking</div>
+  <div class="eyebrow">Invito titolare</div>
+  <h1>Attiva il tuo account</h1>
+  <p>Imposta una password personale per accedere all'area gestionale del tuo salone.</p>
+  <form id="setupForm">
+    <label for="password">Nuova password</label>
+    <input id="password" type="password" minlength="8" autocomplete="new-password" required placeholder="Almeno 8 caratteri">
+    <label for="confirmPassword">Conferma password</label>
+    <input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Ripeti la password">
+    <div id="notice" class="notice hidden"></div>
+    <button id="save" type="submit">Imposta password e accedi</button>
+  </form>
+</main>
+<script>
+(() => {
+  const URL = "https://npypzpcnknizululwxri.supabase.co";
+  const KEY = "sb_publishable_UPbWsd8Xv_Xa2rZcNrebNw_GE0UmdS7";
+  const client = window.supabase.createClient(URL, KEY);
+  const salon = new URLSearchParams(location.search).get("salon");
+  const notice = document.getElementById("notice");
+  const button = document.getElementById("save");
+  function show(text,error=false){notice.textContent=text;notice.classList.remove("hidden","error");if(error)notice.classList.add("error");}
+  client.auth.getSession().then(({data})=>{
+    if(!data.session) show("Il link non è valido o è scaduto. Chiedi al gestore della piattaforma di inviarti un nuovo invito.",true);
+  });
+  document.getElementById("setupForm").addEventListener("submit",async event=>{
+    event.preventDefault();
+    const password=document.getElementById("password").value;
+    const confirm=document.getElementById("confirmPassword").value;
+    if(password.length<8) return show("La password deve contenere almeno 8 caratteri.",true);
+    if(password!==confirm) return show("Le password non coincidono.",true);
+    button.disabled=true;button.textContent="Salvataggio…";
+    const {data:sessionData}=await client.auth.getSession();
+    if(!sessionData.session){button.disabled=false;button.textContent="Imposta password e accedi";return show("Sessione di invito non valida o scaduta. Richiedi un nuovo invito.",true);}
+    const {error}=await client.auth.updateUser({password});
+    if(error){button.disabled=false;button.textContent="Imposta password e accedi";return show(error.message,true);}
+    show("Password impostata. Ti stiamo portando all'area del salone…");
+    const safeSalon=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(salon||"")?salon:"";
+    setTimeout(()=>location.href=safeSalon?"/?salon="+encodeURIComponent(safeSalon):"/",1200);
+  });
+})();
+</script>
+</body>
+</html>
