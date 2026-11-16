@@ -1430,8 +1430,8 @@ SUPABASE_KEY
 const salonIdFromUrl = new URLSearchParams(window.location.search).get('salon');
 const validSalonUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 let PUBLIC_SALON_ID =
-  salonIdFromUrl && validSalonUuid.test(salonIdFromUrl)
-    ? salonIdFromUrl
+  salonIdFromUrl
+    ? (validSalonUuid.test(salonIdFromUrl) ? salonIdFromUrl : '00000000-0000-0000-0000-000000000000')
     : '__PUBLIC_SALON_ID__';
 
 async function resolvePublicSalonId(){
