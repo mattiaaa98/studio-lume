@@ -16,7 +16,7 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
 .btn{border:0;border-radius:9px;padding:12px 17px;background:var(--green);color:#fff;font-weight:650}.btn:hover{background:#183b2c}.btn.secondary{background:#fff;color:var(--green);border:1px solid var(--line)}.btn.danger{background:#fff;color:var(--red);border:1px solid #efd8d5}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}.stat,.panel{background:var(--white);border:1px solid var(--line);border-radius:14px}.stat{padding:20px 22px}.stat span{font-size:12px;color:var(--muted)}.stat strong{display:block;font-family:Georgia,serif;font-size:30px;font-weight:500;margin-top:7px}
 .panel{padding:22px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel h2{font-family:Georgia,serif;font-size:23px;font-weight:500;margin:0}
-.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:650;padding:12px;border-bottom:1px solid var(--line)}td{padding:15px 12px;border-bottom:1px solid #eef1ee;font-size:14px}tr:last-child td{border-bottom:0}.salon-name{font-weight:700}.sub{display:block;color:var(--muted);font-size:12px;margin-top:4px}.actions{display:flex;gap:8px}.mini{padding:7px 10px;border:1px solid var(--line);background:#fff;color:var(--green);border-radius:7px;font-size:12px;font-weight:650}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:650;padding:12px;border-bottom:1px solid var(--line)}td{padding:15px 12px;border-bottom:1px solid #eef1ee;font-size:14px}tr:last-child td{border-bottom:0}.salon-name{font-weight:700}.sub{display:block;color:var(--muted);font-size:12px;margin-top:4px}.actions{display:flex;gap:8px}.mini{padding:7px 10px;border:1px solid var(--line);background:#fff;color:var(--green);border-radius:7px;font-size:12px;font-weight:650}.mini.pause{color:var(--red)}.status-pill{display:inline-block;padding:5px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#e8f0eb;color:#234d3c}.status-pill.paused{background:#f8eae8;color:#a13d37}
 .overlay{position:fixed;inset:0;background:#13231dbb;display:grid;place-items:center;padding:20px;z-index:5}.dialog{background:#fff;border-radius:16px;padding:28px;width:min(100%,480px);box-shadow:0 24px 80px #0003}.dialog h2{font-family:Georgia,serif;font-size:27px;font-weight:500;margin:0 0 7px}.dialog p{color:var(--muted);font-size:13px;margin:0 0 20px}.field{display:block;margin:13px 0}.field span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;outline:none}.field input:focus{border-color:var(--green)}.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
 .login{min-height:calc(100vh - 72px);display:grid;place-items:center;padding:24px}.login-card{width:min(100%,420px);background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}.login-card h1{font-family:Georgia,serif;font-size:30px;font-weight:500;margin:8px 0}.login-card p{color:var(--muted);font-size:13px;line-height:1.6}.login-card .btn{width:100%;margin-top:12px}
 .notice{padding:12px 14px;border-radius:9px;background:var(--green2);color:var(--green);font-size:13px;margin:15px 0}.notice.error{background:#f8eae8;color:var(--red)}
@@ -44,13 +44,13 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
   <div class="heading"><div><h1>Gestione saloni</h1><p>Amministrazione centralizzata della piattaforma.</p></div><button id="newSalon" class="btn" type="button">+ Nuovo salone</button></div>
   <section class="stats">
     <div class="stat"><span>Saloni registrati</span><strong id="salonCount">—</strong></div>
-    <div class="stat"><span>Area di gestione</span><strong>Centralizzata</strong></div>
-    <div class="stat"><span>Account amministratore</span><strong style="font-size:17px;margin-top:14px">mattia.volpi98@gmail.com</strong></div>
+    <div class="stat"><span>Saloni attivi</span><strong id="activeCount">—</strong></div>
+    <div class="stat"><span>Prenotazioni registrate</span><strong id="appointmentCount">—</strong></div>
   </section>
   <section class="panel">
     <div class="panel-head"><h2>I tuoi saloni</h2><button id="refresh" class="btn secondary" type="button">Aggiorna</button></div>
     <div id="loading">Caricamento saloni…</div>
-    <div class="table-wrap hidden" id="tableWrap"><table><thead><tr><th>Salone</th><th>Contatti</th><th>Creato il</th><th></th></tr></thead><tbody id="salonRows"></tbody></table></div>
+    <div class="table-wrap hidden" id="tableWrap"><table><thead><tr><th>Salone</th><th>Contatti</th><th>Stato</th><th>Creato il</th><th></th></tr></thead><tbody id="salonRows"></tbody></table></div>
     <div id="empty" class="empty hidden">Non ci sono ancora saloni. Crea il primo per iniziare.</div>
     <div id="appMessage" class="notice hidden"></div>
   </section>
@@ -64,6 +64,9 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       <label class="field"><span>Email</span><input id="salonEmail" type="email" maxlength="254"></label>
       <label class="field"><span>Telefono</span><input id="salonPhone" maxlength="40"></label>
       <label class="field"><span>Indirizzo</span><input id="salonAddress" maxlength="240"></label>
+      <label class="field"><span>URL logo (facoltativo)</span><input id="salonLogo" type="url" maxlength="1000" placeholder="https://…"></label>
+      <label class="field"><span>Link personalizzato (slug)</span><input id="salonSlug" maxlength="80" placeholder="es. studio-lume"></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field"><span>Colore principale</span><input id="salonPrimary" type="color" value="#234d3c" style="height:46px;padding:4px"></label><label class="field"><span>Colore secondario</span><input id="salonAccent" type="color" value="#c49a5a" style="height:46px;padding:4px"></label></div>
       <div id="dialogMessage" class="notice hidden"></div>
       <div class="form-actions"><button id="cancelDialog" class="btn secondary" type="button">Annulla</button><button id="saveSalon" class="btn" type="submit">Salva salone</button></div>
     </form>
@@ -127,14 +130,36 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       contact.innerHTML = '<span></span><span class="sub"></span>';
       contact.querySelector("span").textContent = salon.email || "Email non inserita";
       contact.querySelector(".sub").textContent = salon.phone || "Telefono non inserito";
+      const status = document.createElement("td");
+      const pill = document.createElement("span"); pill.className = "status-pill" + (salon.active ? "" : " paused"); pill.textContent = salon.active ? "Attivo" : "Sospeso"; status.append(pill);
       const date = document.createElement("td"); date.textContent = formatDate(salon.created_at);
-      const actions = document.createElement("td");
+      const actions = document.createElement("td"); actions.className = "actions";
       const edit = document.createElement("button"); edit.className = "mini"; edit.type = "button"; edit.textContent = "Modifica";
       edit.addEventListener("click", () => openDialog(salon));
-      actions.append(edit);
-      tr.append(name, contact, date, actions);
+      const toggle = document.createElement("button"); toggle.className = "mini" + (salon.active ? " pause" : ""); toggle.type = "button"; toggle.textContent = salon.active ? "Sospendi" : "Riattiva";
+      toggle.addEventListener("click", () => changeStatus(salon));
+      actions.append(edit, toggle);
+      tr.append(name, contact, status, date, actions);
       $("salonRows").append(tr);
     });
+  }
+  async function loadStats() {
+    try {
+      const stats = await adminRequest("dashboard_stats");
+      $("salonCount").textContent = stats.salons ?? 0;
+      $("activeCount").textContent = stats.active_salons ?? 0;
+      $("appointmentCount").textContent = stats.appointments ?? 0;
+    } catch (error) { console.warn("Statistiche non disponibili:", error); }
+  }
+  async function changeStatus(salon) {
+    const next = !salon.active;
+    const action = next ? "riattivare" : "sospendere";
+    if (!confirm("Vuoi " + action + " " + salon.name + "? " + (next ? "" : "Le nuove prenotazioni pubbliche verranno bloccate."))) return;
+    try {
+      await adminRequest("set_salon_status", { id: salon.id, active: next });
+      await loadSalons();
+      message($("appMessage"), next ? "Salone riattivato." : "Salone sospeso: non accetta nuove prenotazioni.");
+    } catch (error) { message($("appMessage"), error.message, true); }
   }
   async function loadSalons() {
     $("loading").classList.remove("hidden");
@@ -145,6 +170,7 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       const result = await adminRequest("list_salons");
       salons = result.salons || [];
       renderSalons();
+      await loadStats();
     } catch (error) {
       $("loading").classList.add("hidden");
       message($("appMessage"), error.message, true);
@@ -158,6 +184,10 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
     $("salonEmail").value = salon?.email || "";
     $("salonPhone").value = salon?.phone || "";
     $("salonAddress").value = salon?.address || "";
+    $("salonLogo").value = salon?.logo_url || "";
+    $("salonSlug").value = salon?.public_slug || "";
+    $("salonPrimary").value = salon?.primary_color || "#234d3c";
+    $("salonAccent").value = salon?.accent_color || "#c49a5a";
     $("dialogTitle").textContent = salon ? "Modifica salone" : "Nuovo salone";
     $("saveSalon").textContent = salon ? "Salva modifiche" : "Crea salone";
     $("salonDialog").classList.remove("hidden");
@@ -190,7 +220,11 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       name: $("salonName").value,
       email: $("salonEmail").value,
       phone: $("salonPhone").value,
-      address: $("salonAddress").value
+      address: $("salonAddress").value,
+      logo_url: $("salonLogo").value,
+      public_slug: $("salonSlug").value,
+      primary_color: $("salonPrimary").value,
+      accent_color: $("salonAccent").value
     };
     try {
       await adminRequest(id ? "update_salon" : "create_salon", id ? { id, ...payload } : payload);
