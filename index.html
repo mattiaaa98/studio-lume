@@ -4040,6 +4040,7 @@ if(profile.data.salon_id !== selectedSalonId){
 
 currentProfile = {...profile.data, salon_id:selectedSalonId};
 const salonId = currentProfile.salon_id;
+await loadSalonBranding(salonId);
 
 const switcher = $('salonSwitcher');
 const selector = $('activeSalonSelect');
