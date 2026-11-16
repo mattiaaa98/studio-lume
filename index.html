@@ -1429,10 +1429,24 @@ SUPABASE_KEY
 // PUBLIC_SALON_ID compilato da Vercel resta il fallback per il link principale.
 const salonIdFromUrl = new URLSearchParams(window.location.search).get('salon');
 const validSalonUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const PUBLIC_SALON_ID =
+let PUBLIC_SALON_ID =
   salonIdFromUrl && validSalonUuid.test(salonIdFromUrl)
     ? salonIdFromUrl
     : '__PUBLIC_SALON_ID__';
+
+async function resolvePublicSalonId(){
+  if(!salonIdFromUrl || validSalonUuid.test(salonIdFromUrl)) return;
+  try{
+    const {data, error} = await supabaseClient.rpc(
+      'get_public_salon_id_by_slug',
+      {p_slug: salonIdFromUrl}
+    );
+    if(error) throw error;
+    if(typeof data === 'string' && validSalonUuid.test(data)) PUBLIC_SALON_ID = data;
+  }catch(error){
+    console.error('Impossibile risolvere il link del salone:', error);
+  }
+}
 
 /* =========================================================
    IDENTITÀ DINAMICA DEL SALONE
@@ -4503,6 +4517,7 @@ showClient();
 
 (async function initAuth(){
 
+await resolvePublicSalonId();
 await loadSalonBranding();
 
 loadDefaultStaff();
