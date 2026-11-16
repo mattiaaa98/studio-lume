@@ -138,7 +138,20 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       edit.addEventListener("click", () => openDialog(salon));
       const toggle = document.createElement("button"); toggle.className = "mini" + (salon.active ? " pause" : ""); toggle.type = "button"; toggle.textContent = salon.active ? "Sospendi" : "Riattiva";
       toggle.addEventListener("click", () => changeStatus(salon));
-      actions.append(edit, toggle);
+      const invite = document.createElement("button"); invite.className = "mini"; invite.type = "button"; invite.textContent = "Invita titolare";
+      invite.addEventListener("click", async () => {
+        const email = prompt("Email del titolare da invitare:", salon.email || "");
+        if (!email) return;
+        const fullName = prompt("Nome e cognome del titolare:", "");
+        if (fullName === null) return;
+        invite.disabled = true; invite.textContent = "Invio…";
+        try {
+          await adminRequest("invite_owner", { salon_id: salon.id, email, full_name: fullName });
+          message($("appMessage"), "Invito inviato a " + email + ". Il titolare potrà impostare la password dal link ricevuto.");
+        } catch (error) { message($("appMessage"), error.message, true); }
+        finally { invite.disabled = false; invite.textContent = "Invita titolare"; }
+      });
+      actions.append(edit, toggle, invite);
       tr.append(name, contact, status, date, actions);
       $("salonRows").append(tr);
     });
