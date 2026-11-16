@@ -12,6 +12,7 @@ const outputDir = path.join(__dirname, 'dist');
 const files = [
   { source: 'index.html', output: 'index.html', replaceSalonId: true },
   { source: 'admin.html', output: 'admin.html', replaceSalonId: false },
+  { source: 'owner-setup.html', output: 'owner-setup.html', replaceSalonId: false },
 ];
 
 fs.mkdirSync(outputDir, { recursive: true });
