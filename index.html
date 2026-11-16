@@ -900,8 +900,7 @@ Area del tuo salone
 class="mini"
 style="font-size:14px;line-height:1.6"
 >
-Ogni negozio avrà un accesso separato e vedrà solo i propri appuntamenti,
-clienti e servizi.
+Vedrai solo i saloni associati al tuo account e potrai passare da uno all'altro.
 </p>
 
 <label for="loginEmail">
@@ -1293,6 +1292,11 @@ Gestionale
 Agenda del salone
 </h2>
 
+<div id="salonSwitcher" style="display:none;margin-top:12px;max-width:320px">
+<label for="activeSalonSelect" style="margin:0 0 5px">Salone da gestire</label>
+<select id="activeSalonSelect" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)"></select>
+</div>
+
 </div>
 
 <div>
@@ -1451,7 +1455,7 @@ async function resolvePublicSalonId(){
 /* =========================================================
    IDENTITÀ DINAMICA DEL SALONE
 ========================================================= */
-async function loadSalonBranding(){
+async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
   const fallbackName = 'Saloni Booking';
   const brandName = document.getElementById('brandSalonName');
   const brandLogo = document.getElementById('brandLogo');
@@ -1459,7 +1463,7 @@ async function loadSalonBranding(){
   try{
     const {data, error} = await supabaseClient.rpc(
       'get_public_salon_branding',
-      {p_salon_id: PUBLIC_SALON_ID}
+      {p_salon_id: salonId}
     );
     if(error) throw error;
 
@@ -1599,6 +1603,8 @@ let staffMembers = [];
 
 let currentProfile =
 null;
+let availableSalons = [];
+let hasResolvedInitialSalon = false;
 
 let selected =
 services[0];
@@ -4003,30 +4009,64 @@ user.id
 )
 .maybeSingle();
 
+const membershipsResult = await supabaseClient.rpc('list_my_salons');
 
-if(
-profile.error ||
-!profile.data
-){
-
-if(showErrors){
-
-toast(
-'Profilo salone non configurato.'
-);
-
+if(profile.error || !profile.data || membershipsResult.error || !Array.isArray(membershipsResult.data) || !membershipsResult.data.length){
+  console.error('Errore profilo o saloni associati:', profile.error, membershipsResult.error);
+  if(showErrors) toast('Non trovo saloni associati a questo account.');
+  return;
 }
 
-return;
+availableSalons = membershipsResult.data;
 
+let selectedSalonId = profile.data.salon_id;
+if(!hasResolvedInitialSalon && salonIdFromUrl && availableSalons.some(s => s.salon_id === salonIdFromUrl)){
+  selectedSalonId = salonIdFromUrl;
+}
+hasResolvedInitialSalon = true;
+
+if(!availableSalons.some(s => s.salon_id === selectedSalonId)){
+  selectedSalonId = availableSalons[0].salon_id;
 }
 
+if(profile.data.salon_id !== selectedSalonId){
+  const {error: switchError} = await supabaseClient.rpc('set_my_active_salon', {p_salon_id:selectedSalonId});
+  if(switchError){
+    console.error('Errore selezione salone:', switchError);
+    if(showErrors) toast('Non posso aprire questo salone con il tuo account.');
+    return;
+  }
+}
 
-currentProfile =
-profile.data;
+currentProfile = {...profile.data, salon_id:selectedSalonId};
+const salonId = currentProfile.salon_id;
 
-const salonId =
-currentProfile.salon_id;
+const switcher = $('salonSwitcher');
+const selector = $('activeSalonSelect');
+if(switcher && selector){
+  switcher.style.display = availableSalons.length > 1 ? 'block' : 'none';
+  selector.innerHTML = availableSalons.map(s => `<option value="${escapeHtml(s.salon_id)}">${escapeHtml(s.salon_name)}</option>`).join('');
+  selector.value = salonId;
+  selector.onchange = async () => {
+    const nextSalonId = selector.value;
+    if(!availableSalons.some(s => s.salon_id === nextSalonId)) return;
+    selector.disabled = true;
+    const {error} = await supabaseClient.rpc('set_my_active_salon', {p_salon_id:nextSalonId});
+    if(error){
+      console.error('Errore cambio salone:', error);
+      toast('Non è stato possibile cambiare salone.');
+      selector.value = currentProfile.salon_id;
+      selector.disabled = false;
+      return;
+    }
+    currentProfile.salon_id = nextSalonId;
+    await loadSalonBranding(nextSalonId);
+    await loadData(false);
+    renderAdmin(window.currentAdminView || 'agenda');
+    toast('Salone cambiato correttamente.');
+    selector.disabled = false;
+  };
+}
 
 
 const [
@@ -4349,6 +4389,7 @@ $('clientTab')
 .classList.add('active');
 
 loadDefaultStaff();
+await loadSalonBranding(PUBLIC_SALON_ID);
 
 await loadPublicServices();
 renderBookingCalendar();
