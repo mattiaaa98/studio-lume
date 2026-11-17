@@ -968,19 +968,9 @@ Prenota online il tuo appuntamento in pochi secondi. Scegli il servizio, l'orari
 </div>
 
 <div class="hero-card">
-
-<div class="eyebrow">
-Oggi
-</div>
-
-<strong>
-09:00 — 19:00
-</strong>
-
-<div class="mini">
-Ultimo appuntamento 18:30
-</div>
-
+<div class="eyebrow">Oggi</div>
+<strong id="salonTodayHours">Orari del salone</strong>
+<div class="mini" id="salonTodayStatus">Consulta gli orari qui sotto</div>
 </div>
 
 </div>
@@ -991,6 +981,13 @@ Ultimo appuntamento 18:30
   <div class="panel"><p id="aboutText" style="white-space:pre-line;line-height:1.75;margin:0"></p></div>
 </section>
 
+<section id="staffPublicSection" style="display:none;margin:0 0 30px">
+  <div class="section-title"><h2>Il nostro staff</h2></div><div id="staffPublicList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px"></div>
+</section>
+<section id="hoursPublicSection" style="display:none;margin:0 0 30px">
+  <div class="section-title"><h2>Orari e contatti</h2></div><div class="panel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px"><div><h3>Orari di apertura</h3><div id="publicHoursList" class="mini" style="display:grid;gap:7px"></div></div><div><h3>Contatti</h3><div id="publicContactList" class="mini" style="display:grid;gap:9px"></div></div></div>
+</section>
+<section id="socialPublicSection" style="display:none;margin:0 0 30px"><div class="section-title"><h2>Seguici</h2></div><div id="socialPublicList" style="display:flex;gap:10px;flex-wrap:wrap"></div></section>
 
 <div class="section-title">
 
@@ -1351,6 +1348,13 @@ class="sidebtn"
 data-view="clients"
 >
 👥 Clienti
+</button>
+
+<button
+class="sidebtn"
+data-view="staff"
+>
+👩‍💼 Staff
 </button>
 
 <button
