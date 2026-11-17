@@ -1519,9 +1519,9 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     ).join('');
     if(staffSection) staffSection.style.display = staffRows.length ? 'block' : 'none';
     const stylistSelect = document.getElementById('stylist');
-    if(stylistSelect && staffRows.length) stylistSelect.innerHTML = staffRows.map(person =>
+    if(stylistSelect) stylistSelect.innerHTML = staffRows.length ? staffRows.map(person =>
       '<option value="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + (person.role ? ' · ' + escapeHtml(person.role) : '') + '</option>'
-    ).join('');
+    ).join('') : '<option value="">Nessun professionista disponibile</option>';
 
     const dayLabels = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
     const hourRows = Array.isArray(data?.business_hours) ? data.business_hours : [];
