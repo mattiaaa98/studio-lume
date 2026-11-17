@@ -3915,6 +3915,89 @@ if(view==='closures'){
 }
 
 /* =========================================================
+   PRESENTAZIONE DELLO STAFF
+========================================================= */
+
+if(view==='staff'){
+  $('dashTitle').textContent = 'Presentazione dello staff';
+  content.innerHTML = '<div class="panel"><p class="mini">Caricamento dello staff…</p></div>';
+  const salonId = currentProfile?.salon_id;
+  if(!salonId){content.innerHTML='<div class="panel">Non riesco a identificare il salone.</div>';return;}
+  const {data: people,error} = await supabaseClient.from('staff')
+    .select('id,name,role,bio,photo_url,active,display_order')
+    .eq('salon_id',salonId).order('display_order').order('name');
+  if(error){console.error(error);content.innerHTML='<div class="panel">Non riesco a caricare lo staff.</div>';return;}
+
+  let html = '<div class="panel"><div class="eyebrow">Il team del salone</div><h3 style="font:500 25px Georgia,serif;margin:8px 0">Aggiungi un professionista</h3><p class="mini">I collaboratori attivi appariranno sul sito pubblico e tra le opzioni di prenotazione. Puoi aggiungere una breve presentazione e una foto.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px"><div><label for="newStaffName">Nome</label><input id="newStaffName" maxlength="100" placeholder="Es. Giulia"></div><div><label for="newStaffRole">Ruolo</label><input id="newStaffRole" maxlength="100" placeholder="Es. Senior stylist"></div></div><label for="newStaffBio">Presentazione</label><textarea id="newStaffBio" rows="3" maxlength="500" placeholder="Racconta brevemente esperienza, specialità e stile di lavoro…"></textarea><label for="newStaffPhoto">Foto (facoltativa)</label><input id="newStaffPhoto" type="file" accept="image/png,image/jpeg,image/webp"><button class="primary" id="addStaffMember" type="button" style="margin-top:14px">Aggiungi al team</button><div id="staffAdminError" class="mini" role="alert" style="color:#a33a32;margin-top:8px"></div></div><div style="display:grid;gap:14px;margin-top:16px">';
+  html += (people||[]).map(person =>
+    '<div class="panel" data-staff-card="' + person.id + '" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start"><div><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+    (person.photo_url ? '<img src="' + escapeHtml(person.photo_url) + '" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover">' : '<div style="width:64px;height:64px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-size:24px">👤</div>') +
+    '<div><strong>' + escapeHtml(person.name) + '</strong><div class="mini">' + (person.active?'Visibile sul sito':'Disattivato') + '</div></div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"><div><label>Nome</label><input data-staff-name="' + person.id + '" maxlength="100" value="' + escapeHtml(person.name||'') + '"></div><div><label>Ruolo</label><input data-staff-role="' + person.id + '" maxlength="100" value="' + escapeHtml(person.role||'') + '"></div></div>' +
+    '<label>Presentazione</label><textarea data-staff-bio="' + person.id + '" rows="3" maxlength="500">' + escapeHtml(person.bio||'') + '</textarea><label>Foto</label><input data-staff-photo="' + person.id + '" type="file" accept="image/png,image/jpeg,image/webp"></div>' +
+    '<div style="display:grid;gap:8px;min-width:112px"><button class="primary" type="button" data-staff-save="' + person.id + '">Salva</button><button class="ghost" type="button" data-staff-toggle="' + person.id + '">' + (person.active?'Disattiva':'Riattiva') + '</button></div></div>'
+  ).join('');
+  if(!people || !people.length) html += '<div class="panel mini">Non hai ancora aggiunto collaboratori.</div>';
+  html += '</div>';
+  content.innerHTML = html;
+
+  const uploadStaffPhoto = async(file)=>{
+    if(!file) return null;
+    if(!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Usa una foto PNG, JPG o WEBP.');
+    if(file.size>4*1024*1024) throw new Error('La foto supera il limite di 4 MB.');
+    const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+    const path=salonId+'/staff-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+    const {error:uploadError}=await supabaseClient.storage.from('salon-branding').upload(path,file,{contentType:file.type,upsert:false});
+    if(uploadError) throw uploadError;
+    return supabaseClient.storage.from('salon-branding').getPublicUrl(path).data.publicUrl;
+  };
+
+  $('addStaffMember').onclick=async()=>{
+    const button=$('addStaffMember'),errorBox=$('staffAdminError');
+    button.disabled=true;button.textContent='Salvataggio…';errorBox.textContent='';
+    try{
+      const name=$('newStaffName').value.trim(),role=$('newStaffRole').value.trim(),bio=$('newStaffBio').value.trim();
+      if(!name) throw new Error('Inserisci il nome del professionista.');
+      const photo=await uploadStaffPhoto($('newStaffPhoto').files?.[0]);
+      const {error:insertError}=await supabaseClient.from('staff').insert({salon_id:salonId,name,role:role||null,bio:bio||null,photo_url:photo,active:true});
+      if(insertError) throw insertError;
+      toast('Professionista aggiunto.');
+      await renderAdmin('staff');
+    }catch(error){console.error(error);errorBox.textContent=error.message||'Non è stato possibile aggiungere il professionista.';}
+    finally{if($('addStaffMember')){$('addStaffMember').disabled=false;$('addStaffMember').textContent='Aggiungi al team';}}
+  };
+
+  content.querySelectorAll('[data-staff-save]').forEach(button=>{
+    button.onclick=async()=>{
+      const id=button.dataset.staffSave,card=content.querySelector('[data-staff-card="' + button.dataset.staffSave + '"]');
+      button.disabled=true;button.textContent='Salvataggio…';
+      try{
+        const name=card.querySelector('[data-staff-name="' + id + '"]').value.trim();
+        if(!name) throw new Error('Il nome non può essere vuoto.');
+        const payload={name,role:card.querySelector('[data-staff-role="' + id + '"]').value.trim()||null,bio:card.querySelector('[data-staff-bio="' + id + '"]').value.trim()||null};
+        const photo=await uploadStaffPhoto(card.querySelector('[data-staff-photo="' + id + '"]').files?.[0]);
+        if(photo) payload.photo_url=photo;
+        const {error:updateError}=await supabaseClient.from('staff').update(payload).eq('id',id).eq('salon_id',salonId);
+        if(updateError) throw updateError;
+        toast('Profilo aggiornato.');
+        await renderAdmin('staff');
+      }catch(error){console.error(error);toast(error.message||'Errore durante il salvataggio.');button.disabled=false;button.textContent='Salva';}
+    };
+  });
+  content.querySelectorAll('[data-staff-toggle]').forEach(button=>{
+    button.onclick=async()=>{
+      const person=(people||[]).find(x=>x.id===button.dataset.staffToggle);
+      if(!person) return;
+      const {error:updateError}=await supabaseClient.from('staff').update({active:!person.active}).eq('id',person.id).eq('salon_id',salonId);
+      if(updateError){console.error(updateError);toast('Non è stato possibile modificare lo stato.');return;}
+      toast(person.active?'Professionista disattivato.':'Professionista riattivato.');
+      await renderAdmin('staff');
+    };
+  });
+  return;
+}
+
+/* =========================================================
    PERSONALIZZAZIONE SITO DEL SALONE
 ========================================================= */
 
