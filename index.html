@@ -1505,7 +1505,7 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     if(aboutText) aboutText.textContent = aboutContent;
     if(aboutSection) aboutSection.style.display = aboutContent ? 'block' : 'none';
 
-    const publicUrl = value => /^https?:\\/\\//i.test(String(value||'').trim()) ? String(value).trim() : '';
+    const publicUrl = value => /^https?:\/\//i.test(String(value||'').trim()) ? String(value).trim() : '';
     const staffRows = Array.isArray(data?.staff) ? data.staff : [];
     const staffSection = document.getElementById('staffPublicSection');
     const staffList = document.getElementById('staffPublicList');
@@ -1539,8 +1539,8 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     }
     const contactItems = [];
     const phone = String(data?.phone||'').trim(), email = String(data?.email||'').trim(), address = String(data?.address||'').trim();
-    if(phone) contactItems.push('<a href="tel:' + escapeHtml(phone.replace(/[^+\\d]/g,'')) + '" style="color:inherit;text-decoration:none">☎ ' + escapeHtml(phone) + '</a>');
-    if(email && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) contactItems.push('<a href="mailto:' + escapeHtml(email) + '" style="color:inherit;text-decoration:none">✉ ' + escapeHtml(email) + '</a>');
+    if(phone) contactItems.push('<a href="tel:' + escapeHtml(phone.replace(/[^+\d]/g,'')) + '" style="color:inherit;text-decoration:none">☎ ' + escapeHtml(phone) + '</a>');
+    if(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) contactItems.push('<a href="mailto:' + escapeHtml(email) + '" style="color:inherit;text-decoration:none">✉ ' + escapeHtml(email) + '</a>');
     if(address) contactItems.push('<span>⌖ ' + escapeHtml(address) + '</span>');
     if(contactList) contactList.innerHTML = contactItems.length ? contactItems.join('') : '<span>Contatta il salone per informazioni.</span>';
     if(hoursSection) hoursSection.style.display = (hourRows.length || contactItems.length) ? 'block' : 'none';
