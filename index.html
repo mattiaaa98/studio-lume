@@ -1517,7 +1517,7 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
       (person.bio ? '<p class="mini" style="line-height:1.6;white-space:pre-line;margin:0">' + escapeHtml(person.bio) + '</p>' : '') +
       '</article>'
     ).join('');
-    if(staffSection) staffSection.style.display = staffRows.length ? 'block' : 'none';
+    if(staffSection) staffSection.style.display = data?.show_staff_section === true && staffRows.length ? 'block' : 'none';
     const stylistSelect = document.getElementById('stylist');
     if(stylistSelect) stylistSelect.innerHTML = staffRows.length ? staffRows.map(person =>
       '<option value="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + (person.role ? ' · ' + escapeHtml(person.role) : '') + '</option>'
@@ -1543,7 +1543,9 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     if(email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) contactItems.push('<a href="mailto:' + escapeHtml(email) + '" style="color:inherit;text-decoration:none">✉ ' + escapeHtml(email) + '</a>');
     if(address) contactItems.push('<span>⌖ ' + escapeHtml(address) + '</span>');
     if(contactList) contactList.innerHTML = contactItems.length ? contactItems.join('') : '<span>Contatta il salone per informazioni.</span>';
-    if(hoursSection) hoursSection.style.display = (hourRows.length || contactItems.length) ? 'block' : 'none';
+    if(hoursSection) hoursSection.style.display = data?.show_hours_section === true && (hourRows.length || contactItems.length) ? 'block' : 'none';
+    const todayCard = document.querySelector('.hero-card');
+    if(todayCard) todayCard.style.display = data?.show_hours_section === true ? 'block' : 'none';
 
     const socialItems = [
       ['Instagram',data?.instagram_url,'◎'],['Facebook',data?.facebook_url,'f'],
@@ -1554,7 +1556,7 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     if(socialList) socialList.innerHTML = socialItems.map(item =>
       '<a href="' + escapeHtml(publicUrl(item[1])) + '" target="_blank" rel="noopener noreferrer" class="ghost" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:inherit;font-weight:700"><span>' + item[2] + '</span>' + item[0] + '</a>'
     ).join('');
-    if(socialSection) socialSection.style.display = socialItems.length ? 'block' : 'none';
+    if(socialSection) socialSection.style.display = data?.show_social_section === true && socialItems.length ? 'block' : 'none';
 
     const todayHours = hourRows.find(row=>Number(row.day_of_week)===new Date().getDay());
     const todayHoursText = document.getElementById('salonTodayHours');
@@ -4008,7 +4010,7 @@ if(view==='branding'){
   if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
 
   const {data: salon, error} = await supabaseClient.from('salons')
-    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text')
+    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
     .eq('id',salonId).single();
   if(error || !salon){
     console.error('Errore caricamento personalizzazione:',error);
@@ -4035,6 +4037,13 @@ if(view==='branding'){
           <label for="brandAboutInput">Chi siamo</label>
           <textarea id="brandAboutInput" rows="6" maxlength="1500" placeholder="Racconta la storia del salone, la tua esperienza e cosa ti rende speciale…" style="width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit">${escapeHtml(salon.about_text||'')}</textarea>
           <p class="mini">Questo testo apparirà sul sito pubblico nella sezione “Chi siamo”.</p>
+          <div style="margin:18px 0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)">
+            <strong>Visibilità delle sezioni sul sito</strong>
+            <p class="mini" style="margin:6px 0 12px">Scegli quali informazioni rendere visibili ai clienti. Le impostazioni valgono solo per questo salone.</p>
+            <label style="display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:600"><input id="showStaffSectionInput" type="checkbox" style="width:auto;margin:0" ${salon.show_staff_section===true?'checked':''}> Mostra “Il nostro staff”</label>
+            <label style="display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:600"><input id="showHoursSectionInput" type="checkbox" style="width:auto;margin:0" ${salon.show_hours_section===true?'checked':''}> Mostra “Orari e contatti”</label>
+            <label style="display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:600"><input id="showSocialSectionInput" type="checkbox" style="width:auto;margin:0" ${salon.show_social_section===true?'checked':''}> Mostra “Seguici” (social e sito web)</label>
+          </div>
           <label for="brandPhoneInput">Telefono pubblico</label><input id="brandPhoneInput" maxlength="40" value="${escapeHtml(salon.phone||'')}" placeholder="Es. 035 123456">
           <label for="brandEmailInput">Email pubblica</label><input id="brandEmailInput" type="email" maxlength="160" value="${escapeHtml(salon.email||'')}" placeholder="info@tuosalone.it">
           <label for="brandAddressInput">Indirizzo</label><input id="brandAddressInput" maxlength="220" value="${escapeHtml(salon.address||'')}" placeholder="Via, numero, città">
@@ -4122,7 +4131,10 @@ if(view==='branding'){
         facebook_url:$('brandFacebookInput').value.trim()||null,
         tiktok_url:$('brandTiktokInput').value.trim()||null,
         website_url:$('brandWebsiteInput').value.trim()||null,
-        cover_image_url:uploaded.cover_image_url||null
+        cover_image_url:uploaded.cover_image_url||null,
+        show_staff_section:$('showStaffSectionInput').checked,
+        show_hours_section:$('showHoursSectionInput').checked,
+        show_social_section:$('showSocialSectionInput').checked
       };
       if(!payload.name) throw new Error('Inserisci il nome del salone.');
       const {error:updateError}=await supabaseClient.from('salons').update(payload).eq('id',salonId);
