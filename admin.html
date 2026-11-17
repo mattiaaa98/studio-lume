@@ -67,6 +67,12 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       <label class="field"><span>URL logo (facoltativo)</span><input id="salonLogo" type="url" maxlength="1000" placeholder="https://…"></label>
       <label class="field"><span>Link personalizzato (slug)</span><input id="salonSlug" maxlength="80" placeholder="es. studio-lume"></label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field"><span>Colore principale</span><input id="salonPrimary" type="color" value="#234d3c" style="height:46px;padding:4px"></label><label class="field"><span>Colore secondario</span><input id="salonAccent" type="color" value="#c49a5a" style="height:46px;padding:4px"></label></div>
+      <div id="ownerSetupFields" style="border-top:1px solid var(--line);margin-top:18px;padding-top:16px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">Accesso del titolare <span style="font-weight:400;color:var(--muted)">(facoltativo)</span></div>
+        <p style="margin:0 0 10px;color:var(--muted);font-size:12px">Inserisci i dati per associare subito il titolare al nuovo salone e inviargli l'invito.</p>
+        <label class="field"><span>Nome e cognome</span><input id="ownerFullName" maxlength="120" autocomplete="name" placeholder="es. Mario Rossi"></label>
+        <label class="field"><span>Email del titolare</span><input id="ownerEmail" type="email" maxlength="254" autocomplete="email" placeholder="nome@esempio.it"></label>
+      </div>
       <div id="dialogMessage" class="notice hidden"></div>
       <div class="form-actions"><button id="cancelDialog" class="btn secondary" type="button">Annulla</button><button id="saveSalon" class="btn" type="submit">Salva salone</button></div>
     </form>
@@ -205,6 +211,9 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
     $("salonSlug").value = salon?.public_slug || "";
     $("salonPrimary").value = salon?.primary_color || "#234d3c";
     $("salonAccent").value = salon?.accent_color || "#c49a5a";
+    $("ownerFullName").value = "";
+    $("ownerEmail").value = "";
+    $("ownerSetupFields").classList.toggle("hidden", !!salon);
     $("dialogTitle").textContent = salon ? "Modifica salone" : "Nuovo salone";
     $("saveSalon").textContent = salon ? "Salva modifiche" : "Crea salone";
     $("salonDialog").classList.remove("hidden");
@@ -244,9 +253,37 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       accent_color: $("salonAccent").value
     };
     try {
-      await adminRequest(id ? "update_salon" : "create_salon", id ? { id, ...payload } : payload);
-      closeDialog(); await loadSalons();
-      message($("appMessage"), id ? "Dati del salone aggiornati." : "Salone creato correttamente.");
+      if (id) {
+        await adminRequest("update_salon", { id, ...payload });
+        closeDialog(); await loadSalons();
+        message($("appMessage"), "Dati del salone aggiornati.");
+      } else {
+        const ownerEmail = $("ownerEmail").value.trim();
+        const ownerName = $("ownerFullName").value.trim();
+        if (ownerEmail && !ownerName) {
+          message($("dialogMessage"), "Inserisci anche il nome e cognome del titolare.", true);
+          return;
+        }
+        const created = await adminRequest("create_salon", payload);
+        const newSalon = created.salon;
+        closeDialog();
+        await loadSalons();
+        if (ownerEmail) {
+          message($("appMessage"), "Salone creato. Sto configurando l'accesso del titolare…");
+          try {
+            const invitation = await adminRequest("invite_owner", {
+              salon_id: newSalon.id, email: ownerEmail, full_name: ownerName
+            });
+            message($("appMessage"), invitation.already_registered
+              ? "Salone creato. L'account " + ownerEmail + " è già registrato ed è stato associato al nuovo salone."
+              : "Salone creato e invito inviato a " + ownerEmail + ". Il titolare potrà impostare la password dal link ricevuto.");
+          } catch (inviteError) {
+            message($("appMessage"), "Il salone è stato creato, ma l'invito al titolare non è riuscito: " + inviteError.message + ". Puoi riprovare con «Invita titolare».", true);
+          }
+        } else {
+          message($("appMessage"), "Salone creato correttamente. Potrai invitare il titolare in un secondo momento.");
+        }
+      }
     } catch (error) { message($("dialogMessage"), error.message, true); }
     finally { $("saveSalon").disabled = false; $("saveSalon").textContent = id ? "Salva modifiche" : "Crea salone"; }
   });
