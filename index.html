@@ -986,6 +986,12 @@ Ultimo appuntamento 18:30
 </div>
 
 
+<section id="aboutSection" style="display:none;margin:0 0 30px">
+  <div class="section-title"><h2>Chi siamo</h2></div>
+  <div class="panel"><p id="aboutText" style="white-space:pre-line;line-height:1.75;margin:0"></p></div>
+</section>
+
+
 <div class="section-title">
 
 <h2>
@@ -1485,10 +1491,15 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     if(brandSub){ brandSub.textContent = slogan; brandSub.style.display = slogan ? 'inline' : 'none'; }
     const heroTitle = document.getElementById('heroTitle');
     const heroDescription = document.getElementById('heroDescription');
+    const aboutSection = document.getElementById('aboutSection');
+    const aboutText = document.getElementById('aboutText');
     const heroCover = document.getElementById('heroCover');
     const heroCoverImg = document.getElementById('heroCoverImg');
     if(heroTitle) heroTitle.textContent = data?.hero_title?.trim() || 'Il tuo momento, senza attese.';
     if(heroDescription) heroDescription.textContent = data?.hero_description?.trim() || 'Prenota online il tuo appuntamento in pochi secondi. Scegli il servizio, l’orario e lascia il resto a noi.';
+    const aboutContent = typeof data?.about_text === 'string' ? data.about_text.trim() : '';
+    if(aboutText) aboutText.textContent = aboutContent;
+    if(aboutSection) aboutSection.style.display = aboutContent ? 'block' : 'none';
     const coverUrl = typeof data?.cover_image_url === 'string' ? data.cover_image_url.trim() : '';
     if(heroCover && heroCoverImg && /^https:\/\//i.test(coverUrl)){ heroCoverImg.src = coverUrl; heroCover.style.display = 'block'; }
     else if(heroCover && heroCoverImg){ heroCover.style.display = 'none'; heroCoverImg.removeAttribute('src'); }
@@ -3852,7 +3863,7 @@ if(view==='branding'){
   if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
 
   const {data: salon, error} = await supabaseClient.from('salons')
-    .select('id,name,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url')
+    .select('id,name,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text')
     .eq('id',salonId).single();
   if(error || !salon){
     console.error('Errore caricamento personalizzazione:',error);
@@ -3876,6 +3887,9 @@ if(view==='branding'){
           <input id="brandHeroTitleInput" maxlength="100" value="${escapeHtml(salon.hero_title||'')}" placeholder="Il tuo momento, senza attese.">
           <label for="brandHeroDescriptionInput">Descrizione del sito</label>
           <textarea id="brandHeroDescriptionInput" rows="3" maxlength="300" style="width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit">${escapeHtml(salon.hero_description||'')}</textarea>
+          <label for="brandAboutInput">Chi siamo</label>
+          <textarea id="brandAboutInput" rows="6" maxlength="1500" placeholder="Racconta la storia del salone, la tua esperienza e cosa ti rende speciale…" style="width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit">${escapeHtml(salon.about_text||'')}</textarea>
+          <p class="mini">Questo testo apparirà sul sito pubblico nella sezione “Chi siamo”.</p>
         </div>
         <div>
           <label for="brandPrimaryInput">Colore principale</label>
@@ -3948,6 +3962,7 @@ if(view==='branding'){
         slogan:$('brandSloganInput').value.trim()||null,
         hero_title:$('brandHeroTitleInput').value.trim()||null,
         hero_description:$('brandHeroDescriptionInput').value.trim()||null,
+        about_text:$('brandAboutInput').value.trim()||null,
         cover_image_url:uploaded.cover_image_url||null
       };
       if(!payload.name) throw new Error('Inserisci il nome del salone.');
