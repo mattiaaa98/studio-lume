@@ -945,22 +945,24 @@ style="text-align:center;margin-top:14px"
 
 <section id="clientView">
 
+<div id="heroCover" style="display:none;margin:0 0 28px;border-radius:22px;overflow:hidden;max-height:300px">
+<img id="heroCoverImg" alt="Immagine del salone" style="display:block;width:100%;max-height:300px;object-fit:cover">
+</div>
+
 <div class="hero">
 
 <div>
 
-<div class="eyebrow">
+<div class="eyebrow" id="heroEyebrow">
 Prenotazioni online
 </div>
 
-<h1>
-Il tuo momento,<br>
-<em>senza attese.</em>
+<h1 id="heroTitle">
+Il tuo momento, senza attese.
 </h1>
 
-<p>
-Prenota online il tuo appuntamento in pochi secondi.
-Scegli il servizio, l'orario e lascia il resto a noi.
+<p id="heroDescription">
+Prenota online il tuo appuntamento in pochi secondi. Scegli il servizio, l'orario e lascia il resto a noi.
 </p>
 
 </div>
@@ -1366,6 +1368,13 @@ data-view="settings"
 ⚙ Impostazioni
 </button>
 
+<button
+class="sidebtn"
+data-view="branding"
+>
+🎨 Personalizza sito
+</button>
+
 
 <div
 style="margin-top:25px;border-top:1px solid var(--line);padding-top:18px"
@@ -1459,6 +1468,7 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
   const fallbackName = 'Saloni Booking';
   const brandName = document.getElementById('brandSalonName');
   const brandLogo = document.getElementById('brandLogo');
+  const brandSub = document.getElementById('brandSub');
 
   try{
     const {data, error} = await supabaseClient.rpc(
@@ -1471,6 +1481,17 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
       ? data.name.trim()
       : fallbackName;
     if(brandName) brandName.textContent = displayName;
+    const slogan = typeof data?.slogan === 'string' ? data.slogan.trim() : '';
+    if(brandSub){ brandSub.textContent = slogan; brandSub.style.display = slogan ? 'inline' : 'none'; }
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDescription = document.getElementById('heroDescription');
+    const heroCover = document.getElementById('heroCover');
+    const heroCoverImg = document.getElementById('heroCoverImg');
+    if(heroTitle) heroTitle.textContent = data?.hero_title?.trim() || 'Il tuo momento, senza attese.';
+    if(heroDescription) heroDescription.textContent = data?.hero_description?.trim() || 'Prenota online il tuo appuntamento in pochi secondi. Scegli il servizio, l’orario e lascia il resto a noi.';
+    const coverUrl = typeof data?.cover_image_url === 'string' ? data.cover_image_url.trim() : '';
+    if(heroCover && heroCoverImg && /^https:\/\//i.test(coverUrl)){ heroCoverImg.src = coverUrl; heroCover.style.display = 'block'; }
+    else if(heroCover && heroCoverImg){ heroCover.style.display = 'none'; heroCoverImg.removeAttribute('src'); }
 
     const primary = /^#[0-9a-f]{6}$/i.test(data?.primary_color || '') ? data.primary_color : '#174a8b';
     const accent = /^#[0-9a-f]{6}$/i.test(data?.accent_color || '') ? data.accent_color : '#d62839';
@@ -3817,6 +3838,131 @@ if(view==='closures'){
       renderAdmin('closures');
     };
   });
+  return;
+}
+
+/* =========================================================
+   PERSONALIZZAZIONE SITO DEL SALONE
+========================================================= */
+
+if(view==='branding'){
+  $('dashTitle').textContent = 'Personalizza sito';
+  content.innerHTML = '<div class="panel"><p class="mini">Caricamento personalizzazione…</p></div>';
+  const salonId = currentProfile?.salon_id;
+  if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
+
+  const {data: salon, error} = await supabaseClient.from('salons')
+    .select('id,name,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url')
+    .eq('id',salonId).single();
+  if(error || !salon){
+    console.error('Errore caricamento personalizzazione:',error);
+    content.innerHTML = '<div class="panel">Non riesco a caricare le impostazioni grafiche del salone.</div>';
+    return;
+  }
+
+  const safeColor = value => /^#[0-9a-f]{6}$/i.test(value||'') ? value : '#174a8b';
+  content.innerHTML = `
+    <div class="panel">
+      <div class="eyebrow">Identità del tuo salone</div>
+      <h3 style="font:500 27px Georgia,serif;margin:8px 0">Personalizza il tuo sito</h3>
+      <p class="mini" style="font-size:14px;line-height:1.6">Le modifiche riguardano solo il sito di questo salone. Puoi cambiare logo, immagine, colori e testi in qualsiasi momento.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:20px">
+        <div>
+          <label for="brandNameInput">Nome del salone</label>
+          <input id="brandNameInput" maxlength="120" value="${escapeHtml(salon.name||'')}">
+          <label for="brandSloganInput">Slogan sotto al nome (facoltativo)</label>
+          <input id="brandSloganInput" maxlength="80" value="${escapeHtml(salon.slogan||'')}" placeholder="Es. Il tuo stile, la nostra passione">
+          <label for="brandHeroTitleInput">Titolo principale</label>
+          <input id="brandHeroTitleInput" maxlength="100" value="${escapeHtml(salon.hero_title||'')}" placeholder="Il tuo momento, senza attese.">
+          <label for="brandHeroDescriptionInput">Descrizione del sito</label>
+          <textarea id="brandHeroDescriptionInput" rows="3" maxlength="300" style="width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit">${escapeHtml(salon.hero_description||'')}</textarea>
+        </div>
+        <div>
+          <label for="brandPrimaryInput">Colore principale</label>
+          <div style="display:flex;align-items:center;gap:12px"><input id="brandPrimaryInput" type="color" value="${safeColor(salon.primary_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Pulsanti e dettagli principali</span></div>
+          <label for="brandAccentInput">Colore secondario</label>
+          <div style="display:flex;align-items:center;gap:12px"><input id="brandAccentInput" type="color" value="${safeColor(salon.accent_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Slogan e dettagli grafici</span></div>
+          <label for="brandLogoFile">Logo del salone</label>
+          <input id="brandLogoFile" type="file" accept="image/png,image/jpeg,image/webp">
+          <div id="brandLogoStatus" class="mini">${salon.logo_url?'Logo attualmente caricato.':'Nessun logo caricato.'}</div>
+          <img id="brandLogoPreview" alt="Anteprima logo" src="${/^https:\/\//i.test(salon.logo_url||'')?escapeHtml(salon.logo_url):''}" style="max-width:150px;max-height:90px;object-fit:contain;margin-top:8px;${salon.logo_url?'':'display:none'}">
+          <label for="brandCoverFile">Immagine grande del sito</label>
+          <input id="brandCoverFile" type="file" accept="image/png,image/jpeg,image/webp">
+          <div id="brandCoverStatus" class="mini">${salon.cover_image_url?'Immagine attualmente caricata.':'Nessuna immagine caricata.'}</div>
+          <img id="brandCoverPreview" alt="Anteprima immagine sito" src="${/^https:\/\//i.test(salon.cover_image_url||'')?escapeHtml(salon.cover_image_url):''}" style="width:100%;max-height:120px;object-fit:cover;border-radius:12px;margin-top:8px;${salon.cover_image_url?'':'display:none'}">
+        </div>
+      </div>
+      <div style="margin-top:22px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface2)">
+        <div class="mini" style="margin-bottom:10px">Anteprima colori</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span id="brandPreviewPrimary" style="display:inline-block;padding:11px 18px;border-radius:10px;color:white;background:${safeColor(salon.primary_color)}">Pulsante principale</span>
+          <span id="brandPreviewAccent" style="font-weight:800;color:${safeColor(salon.accent_color)}">Slogan e dettagli</span>
+        </div>
+      </div>
+      <button class="primary" id="saveBranding" type="button">Salva personalizzazione</button>
+      <p class="mini" style="margin-top:10px">Formati immagini: PNG, JPG o WEBP. Dimensione massima: 4 MB per immagine.</p>
+      <div id="brandingError" class="mini" role="alert" style="color:#a33a32;margin-top:8px"></div>
+    </div>`;
+
+  const uploaded = {logo_url:salon.logo_url||'',cover_image_url:salon.cover_image_url||''};
+  const previewColors = ()=>{
+    $('brandPreviewPrimary').style.background=$('brandPrimaryInput').value;
+    $('brandPreviewAccent').style.color=$('brandAccentInput').value;
+  };
+  $('brandPrimaryInput').oninput=previewColors;
+  $('brandAccentInput').oninput=previewColors;
+
+  const uploadBrandImage = async(file,kind)=>{
+    if(!file) return;
+    if(!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Usa un file PNG, JPG o WEBP.');
+    if(file.size>4*1024*1024) throw new Error('L’immagine supera il limite di 4 MB.');
+    const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+    const path=salonId+'/'+kind+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+    const {error:uploadError}=await supabaseClient.storage.from('salon-branding').upload(path,file,{contentType:file.type,upsert:false});
+    if(uploadError) throw uploadError;
+    const {data}=supabaseClient.storage.from('salon-branding').getPublicUrl(path);
+    return data.publicUrl;
+  };
+  $('brandLogoFile').onchange=async()=>{
+    const file=$('brandLogoFile').files?.[0];if(!file)return;
+    $('brandLogoStatus').textContent='Caricamento logo…';
+    try{uploaded.logo_url=await uploadBrandImage(file,'logo');$('brandLogoPreview').src=uploaded.logo_url;$('brandLogoPreview').style.display='block';$('brandLogoStatus').textContent='Logo caricato. Premi “Salva personalizzazione” per pubblicarlo.';}
+    catch(error){$('brandLogoStatus').textContent=error.message||'Errore caricamento logo.';}
+  };
+  $('brandCoverFile').onchange=async()=>{
+    const file=$('brandCoverFile').files?.[0];if(!file)return;
+    $('brandCoverStatus').textContent='Caricamento immagine…';
+    try{uploaded.cover_image_url=await uploadBrandImage(file,'cover');$('brandCoverPreview').src=uploaded.cover_image_url;$('brandCoverPreview').style.display='block';$('brandCoverStatus').textContent='Immagine caricata. Premi “Salva personalizzazione” per pubblicarla.';}
+    catch(error){$('brandCoverStatus').textContent=error.message||'Errore caricamento immagine.';}
+  };
+
+  $('saveBranding').onclick=async()=>{
+    const button=$('saveBranding'),errorBox=$('brandingError');
+    button.disabled=true;button.textContent='Salvataggio…';errorBox.textContent='';
+    try{
+      const payload={
+        name:$('brandNameInput').value.trim(),
+        logo_url:uploaded.logo_url||null,
+        primary_color:$('brandPrimaryInput').value,
+        accent_color:$('brandAccentInput').value,
+        slogan:$('brandSloganInput').value.trim()||null,
+        hero_title:$('brandHeroTitleInput').value.trim()||null,
+        hero_description:$('brandHeroDescriptionInput').value.trim()||null,
+        cover_image_url:uploaded.cover_image_url||null
+      };
+      if(!payload.name) throw new Error('Inserisci il nome del salone.');
+      const {error:updateError}=await supabaseClient.from('salons').update(payload).eq('id',salonId);
+      if(updateError) throw updateError;
+      await loadSalonBranding(salonId);
+      toast('Personalizzazione salvata.');
+      renderAdmin('branding');
+    }catch(error){
+      console.error('Errore salvataggio personalizzazione:',error);
+      errorBox.textContent=error?.message||'Non è stato possibile salvare le modifiche.';
+    }finally{
+      if($('saveBranding')){$('saveBranding').disabled=false;$('saveBranding').textContent='Salva personalizzazione';}
+    }
+  };
   return;
 }
 
