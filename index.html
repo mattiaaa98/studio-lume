@@ -1504,6 +1504,64 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     const aboutContent = typeof data?.about_text === 'string' ? data.about_text.trim() : '';
     if(aboutText) aboutText.textContent = aboutContent;
     if(aboutSection) aboutSection.style.display = aboutContent ? 'block' : 'none';
+
+    const publicUrl = value => /^https?:\\/\\//i.test(String(value||'').trim()) ? String(value).trim() : '';
+    const staffRows = Array.isArray(data?.staff) ? data.staff : [];
+    const staffSection = document.getElementById('staffPublicSection');
+    const staffList = document.getElementById('staffPublicList');
+    if(staffList) staffList.innerHTML = staffRows.map(person =>
+      '<article class="panel" style="padding:16px;text-align:center">' +
+      (publicUrl(person.photo_url) ? '<img src="' + escapeHtml(publicUrl(person.photo_url)) + '" alt="' + escapeHtml(person.name||'Professionista') + '" style="width:112px;height:112px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block">' : '') +
+      '<h3 style="margin:4px 0">' + escapeHtml(person.name||'') + '</h3>' +
+      (person.role ? '<div class="mini" style="font-weight:700;margin-bottom:8px">' + escapeHtml(person.role) + '</div>' : '') +
+      (person.bio ? '<p class="mini" style="line-height:1.6;white-space:pre-line;margin:0">' + escapeHtml(person.bio) + '</p>' : '') +
+      '</article>'
+    ).join('');
+    if(staffSection) staffSection.style.display = staffRows.length ? 'block' : 'none';
+    const stylistSelect = document.getElementById('stylist');
+    if(stylistSelect && staffRows.length) stylistSelect.innerHTML = staffRows.map(person =>
+      '<option value="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + (person.role ? ' · ' + escapeHtml(person.role) : '') + '</option>'
+    ).join('');
+
+    const dayLabels = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+    const hourRows = Array.isArray(data?.business_hours) ? data.business_hours : [];
+    const hoursSection = document.getElementById('hoursPublicSection');
+    const hoursList = document.getElementById('publicHoursList');
+    const contactList = document.getElementById('publicContactList');
+    if(hoursList){
+      const byDay = new Map(hourRows.map(row=>[Number(row.day_of_week),row]));
+      hoursList.innerHTML = [1,2,3,4,5,6,0].map(day=>{
+        const row = byDay.get(day);
+        const timeText = !row || row.closed ? 'Chiuso' : String(row.opens_at||'').slice(0,5) + ' – ' + String(row.closes_at||'').slice(0,5);
+        const pause = row && !row.closed && row.break_start && row.break_end ? '<span style="display:block;opacity:.7;font-size:12px">Pausa ' + String(row.break_start).slice(0,5) + '–' + String(row.break_end).slice(0,5) + '</span>' : '';
+        return '<div style="display:flex;justify-content:space-between;gap:12px"><span>' + dayLabels[day] + '</span><span style="text-align:right">' + timeText + pause + '</span></div>';
+      }).join('');
+    }
+    const contactItems = [];
+    const phone = String(data?.phone||'').trim(), email = String(data?.email||'').trim(), address = String(data?.address||'').trim();
+    if(phone) contactItems.push('<a href="tel:' + escapeHtml(phone.replace(/[^+\\d]/g,'')) + '" style="color:inherit;text-decoration:none">☎ ' + escapeHtml(phone) + '</a>');
+    if(email && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) contactItems.push('<a href="mailto:' + escapeHtml(email) + '" style="color:inherit;text-decoration:none">✉ ' + escapeHtml(email) + '</a>');
+    if(address) contactItems.push('<span>⌖ ' + escapeHtml(address) + '</span>');
+    if(contactList) contactList.innerHTML = contactItems.length ? contactItems.join('') : '<span>Contatta il salone per informazioni.</span>';
+    if(hoursSection) hoursSection.style.display = (hourRows.length || contactItems.length) ? 'block' : 'none';
+
+    const socialItems = [
+      ['Instagram',data?.instagram_url,'◎'],['Facebook',data?.facebook_url,'f'],
+      ['TikTok',data?.tiktok_url,'♪'],['Sito web',data?.website_url,'↗']
+    ].filter(item=>publicUrl(item[1]));
+    const socialSection = document.getElementById('socialPublicSection');
+    const socialList = document.getElementById('socialPublicList');
+    if(socialList) socialList.innerHTML = socialItems.map(item =>
+      '<a href="' + escapeHtml(publicUrl(item[1])) + '" target="_blank" rel="noopener noreferrer" class="ghost" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:inherit;font-weight:700"><span>' + item[2] + '</span>' + item[0] + '</a>'
+    ).join('');
+    if(socialSection) socialSection.style.display = socialItems.length ? 'block' : 'none';
+
+    const todayHours = hourRows.find(row=>Number(row.day_of_week)===new Date().getDay());
+    const todayHoursText = document.getElementById('salonTodayHours');
+    const todayStatus = document.getElementById('salonTodayStatus');
+    if(todayHoursText) todayHoursText.textContent = !todayHours || todayHours.closed ? 'Chiuso oggi' : String(todayHours.opens_at||'').slice(0,5) + ' – ' + String(todayHours.closes_at||'').slice(0,5);
+    if(todayStatus) todayStatus.textContent = todayHours && !todayHours.closed && todayHours.break_start && todayHours.break_end ? 'Pausa ' + String(todayHours.break_start).slice(0,5) + ' – ' + String(todayHours.break_end).slice(0,5) : 'Orari settimanali e contatti qui sotto';
+
     const coverUrl = typeof data?.cover_image_url === 'string' ? data.cover_image_url.trim() : '';
     if(heroCover && heroCoverImg && /^https:\/\//i.test(coverUrl)){ heroCoverImg.src = coverUrl; heroCover.style.display = 'block'; }
     else if(heroCover && heroCoverImg){ heroCover.style.display = 'none'; heroCoverImg.removeAttribute('src'); }
@@ -3867,7 +3925,7 @@ if(view==='branding'){
   if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
 
   const {data: salon, error} = await supabaseClient.from('salons')
-    .select('id,name,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text')
+    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text')
     .eq('id',salonId).single();
   if(error || !salon){
     console.error('Errore caricamento personalizzazione:',error);
@@ -3894,12 +3952,19 @@ if(view==='branding'){
           <label for="brandAboutInput">Chi siamo</label>
           <textarea id="brandAboutInput" rows="6" maxlength="1500" placeholder="Racconta la storia del salone, la tua esperienza e cosa ti rende speciale…" style="width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font:inherit">${escapeHtml(salon.about_text||'')}</textarea>
           <p class="mini">Questo testo apparirà sul sito pubblico nella sezione “Chi siamo”.</p>
+          <label for="brandPhoneInput">Telefono pubblico</label><input id="brandPhoneInput" maxlength="40" value="${escapeHtml(salon.phone||'')}" placeholder="Es. 035 123456">
+          <label for="brandEmailInput">Email pubblica</label><input id="brandEmailInput" type="email" maxlength="160" value="${escapeHtml(salon.email||'')}" placeholder="info@tuosalone.it">
+          <label for="brandAddressInput">Indirizzo</label><input id="brandAddressInput" maxlength="220" value="${escapeHtml(salon.address||'')}" placeholder="Via, numero, città">
         </div>
         <div>
           <label for="brandPrimaryInput">Colore principale</label>
           <div style="display:flex;align-items:center;gap:12px"><input id="brandPrimaryInput" type="color" value="${safeColor(salon.primary_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Pulsanti e dettagli principali</span></div>
           <label for="brandAccentInput">Colore secondario</label>
           <div style="display:flex;align-items:center;gap:12px"><input id="brandAccentInput" type="color" value="${safeColor(salon.accent_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Slogan e dettagli grafici</span></div>
+          <label for="brandInstagramInput">Instagram (link completo)</label><input id="brandInstagramInput" type="url" maxlength="300" value="${escapeHtml(salon.instagram_url||'')}" placeholder="https://instagram.com/tuosalone">
+          <label for="brandFacebookInput">Facebook (link completo)</label><input id="brandFacebookInput" type="url" maxlength="300" value="${escapeHtml(salon.facebook_url||'')}" placeholder="https://facebook.com/tuosalone">
+          <label for="brandTiktokInput">TikTok (link completo)</label><input id="brandTiktokInput" type="url" maxlength="300" value="${escapeHtml(salon.tiktok_url||'')}" placeholder="https://tiktok.com/@tuosalone">
+          <label for="brandWebsiteInput">Sito web</label><input id="brandWebsiteInput" type="url" maxlength="300" value="${escapeHtml(salon.website_url||'')}" placeholder="https://www.tuosalone.it">
           <label for="brandLogoFile">Logo del salone</label>
           <input id="brandLogoFile" type="file" accept="image/png,image/jpeg,image/webp">
           <div id="brandLogoStatus" class="mini">${salon.logo_url?'Logo attualmente caricato.':'Nessun logo caricato.'}</div>
@@ -3967,6 +4032,13 @@ if(view==='branding'){
         hero_title:$('brandHeroTitleInput').value.trim()||null,
         hero_description:$('brandHeroDescriptionInput').value.trim()||null,
         about_text:$('brandAboutInput').value.trim()||null,
+        phone:$('brandPhoneInput').value.trim()||null,
+        email:$('brandEmailInput').value.trim()||null,
+        address:$('brandAddressInput').value.trim()||null,
+        instagram_url:$('brandInstagramInput').value.trim()||null,
+        facebook_url:$('brandFacebookInput').value.trim()||null,
+        tiktok_url:$('brandTiktokInput').value.trim()||null,
+        website_url:$('brandWebsiteInput').value.trim()||null,
         cover_image_url:uploaded.cover_image_url||null
       };
       if(!payload.name) throw new Error('Inserisci il nome del salone.');
