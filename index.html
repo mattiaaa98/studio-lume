@@ -2967,6 +2967,14 @@ toast(
 }
 
 
+function agendaStaffFilterHtml(){
+  const selected=window.agendaStaffFilter||'all';
+  return '<label class="mini" for="agendaStaffFilter" style="display:flex;align-items:center;gap:7px;white-space:nowrap">Professionista <select id="agendaStaffFilter" style="width:auto;min-width:150px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text)"><option value="all" '+(selected==='all'?'selected':'')+'>Tutti</option>'+staffMembers.map(s=>'<option value="'+escapeHtml(s.id)+'" '+(selected===s.id?'selected':'')+'>'+escapeHtml(s.name)+'</option>').join('')+'</select></label>';
+}
+function bindAgendaStaffFilter(){
+  const select=$('agendaStaffFilter');
+  if(select)select.onchange=()=>{window.agendaStaffFilter=select.value;renderAdmin('agenda');};
+}
 function appointmentStatusLabel(status){
   const labels={confirmed:'Confermato',completed:'Completato',cancelled:'Annullato',no_show:'Assente',pending:'In attesa'};
   return labels[status]||status||'Da definire';
@@ -3069,7 +3077,7 @@ if(window.agendaMode==='day'||window.agendaMode==='week'){
   const fromKey=romeDateKey(rangeStart),toKey=romeDateKey(rangeEnd);
   const title=mode==='day'?new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Rome'}).format(anchorDate):new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',timeZone:'Europe/Rome'}).format(rangeStart)+' — '+new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Rome'}).format(rangeEnd);
   const days=[];for(let d=new Date(rangeStart);d<=rangeEnd;d.setDate(d.getDate()+1))days.push({date:new Date(d),key:romeDateKey(d)});
-  const rangeAppointments=appointments.filter(a=>a.date>=fromKey&&a.date<=toKey).sort((a,b)=>(a.starts_at||'').localeCompare(b.starts_at||''));
+  const rangeAppointments=appointments.filter(a=>a.date>=fromKey&&a.date<=toKey&&((!window.agendaStaffFilter||window.agendaStaffFilter==='all')||a.staff_id===window.agendaStaffFilter)).sort((a,b)=>(a.starts_at||'').localeCompare(b.starts_at||''));
   let listHtml='';
   days.forEach(day=>{
     const dayAppointments=rangeAppointments.filter(a=>a.date===day.key);
@@ -3078,7 +3086,8 @@ if(window.agendaMode==='day'||window.agendaMode==='week'){
     else dayAppointments.forEach(a=>{listHtml+='<div class="agenda-item" role="button" tabindex="0" data-appointment="'+escapeHtml(a.id)+'"><div class="agenda-item-time">'+escapeHtml(formatAppointmentTime(a.starts_at))+'<div class="mini">— '+escapeHtml(formatAppointmentTime(a.ends_at))+'</div></div><div><div class="agenda-item-title">'+escapeHtml(a.name)+'</div><div class="agenda-item-info">'+escapeHtml(a.service)+' · '+escapeHtml(a.stylist||'Professionista')+'<br>'+(a.phone?'<a href="tel:'+escapeHtml(a.phone)+'" onclick="event.stopPropagation()">'+escapeHtml(a.phone)+'</a>':'Telefono non disponibile')+'</div></div><span class="status-pill status-'+escapeHtml(a.status||'')+'">'+escapeHtml(appointmentStatusLabel(a.status))+'</span></div>';});
     listHtml+='</section>';
   });
-  content.innerHTML='<div class="agenda-toolbar"><div class="agenda-toolbar-left"><button class="agenda-nav" id="agendaPrev" title="Periodo precedente">‹</button><div class="month-title">'+escapeHtml(title)+'</div><button class="agenda-nav" id="agendaNext" title="Periodo successivo">›</button></div><div class="agenda-toolbar-right"><div class="agenda-view-switch"><button type="button" class="agenda-view-btn '+(mode==='day'?'active':'')+'" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn '+(mode==='week'?'active':'')+'" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="agendaToday">Oggi</button></div></div><div class="agenda-summary"><strong>'+rangeAppointments.length+'</strong> appuntamenti nel periodo · seleziona una scheda per vedere o modificare i dettagli.</div><div class="agenda-day-list">'+listHtml+'</div>';
+  content.innerHTML='<div class="agenda-toolbar"><div class="agenda-toolbar-left"><button class="agenda-nav" id="agendaPrev" title="Periodo precedente">‹</button><div class="month-title">'+escapeHtml(title)+'</div><button class="agenda-nav" id="agendaNext" title="Periodo successivo">›</button></div><div class="agenda-toolbar-right">'+agendaStaffFilterHtml()+'<div class="agenda-view-switch"><button type="button" class="agenda-view-btn '+(mode==='day'?'active':'')+'" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn '+(mode==='week'?'active':'')+'" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="agendaToday">Oggi</button></div></div><div class="agenda-summary"><strong>'+rangeAppointments.length+'</strong> appuntamenti nel periodo · seleziona una scheda per vedere o modificare i dettagli.</div><div class="agenda-day-list">'+listHtml+'</div>';
+  bindAgendaStaffFilter();
   document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;if(window.agendaMode==='month'){window.agendaMonth=new Date(window.agendaDate||new Date());window.agendaMonth.setDate(1);}renderAdmin('agenda');};});
   $('agendaPrev').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()-(mode==='week'?7:1));renderAdmin('agenda');};
   $('agendaNext').onclick=()=>{window.agendaDate=new Date(anchorDate);window.agendaDate.setDate(window.agendaDate.getDate()+(mode==='week'?7:1));renderAdmin('agenda');};
@@ -3177,7 +3186,8 @@ a.date.split('-');
 
 return(
 Number(parts[0])===year &&
-Number(parts[1])===month+1
+Number(parts[1])===month+1 &&
+((!window.agendaStaffFilter||window.agendaStaffFilter==='all')||a.staff_id===window.agendaStaffFilter)
 );
 
 });
@@ -3211,7 +3221,7 @@ title="Mese successivo"
 
 </div>
 
-<div class="agenda-toolbar-right"><div class="agenda-view-switch" aria-label="Vista agenda"><button type="button" class="agenda-view-btn ${window.agendaMode==='day'?'active':''}" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn ${window.agendaMode==='week'?'active':''}" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn ${window.agendaMode==='month'?'active':''}" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="todayMonth">Oggi</button></div>
+<div class="agenda-toolbar-right">${agendaStaffFilterHtml()}<div class="agenda-view-switch" aria-label="Vista agenda"><button type="button" class="agenda-view-btn ${window.agendaMode==='day'?'active':''}" data-agenda-mode="day">Giorno</button><button type="button" class="agenda-view-btn ${window.agendaMode==='week'?'active':''}" data-agenda-mode="week">Settimana</button><button type="button" class="agenda-view-btn ${window.agendaMode==='month'?'active':''}" data-agenda-mode="month">Mese</button></div><button class="agenda-today" id="todayMonth">Oggi</button></div>
 
 </div>
 
@@ -3301,9 +3311,7 @@ dateKey===todayKey;
 
 const list =
 appointments
-.filter(a=>
-a.date===dateKey
-)
+.filter(a=>a.date===dateKey&&((!window.agendaStaffFilter||window.agendaStaffFilter==='all')||a.staff_id===window.agendaStaffFilter))
 .sort(
 (a,b)=>
 a.time.localeCompare(b.time)
@@ -3386,6 +3394,7 @@ Nessun appuntamento
 
 
 /* CAMBIO VISTA GIORNO / SETTIMANA / MESE */
+bindAgendaStaffFilter();
 document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;window.agendaDate=new Date();window.agendaMonth=new Date();window.agendaMonth.setDate(1);renderAdmin('agenda');};});
 /* NAVIGAZIONE MESI */
 
