@@ -136,6 +136,9 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
       contact.innerHTML = '<span></span><span class="sub"></span>';
       contact.querySelector("span").textContent = salon.email || "Email non inserita";
       contact.querySelector(".sub").textContent = salon.phone || "Telefono non inserito";
+      const bookings = document.createElement("td");
+      bookings.innerHTML = '<strong></strong><span class="sub">totali</span>';
+      bookings.querySelector("strong").textContent = Number(salon.appointments_count ?? 0).toLocaleString("it-IT");
       const status = document.createElement("td");
       const pill = document.createElement("span"); pill.className = "status-pill" + (salon.active ? "" : " paused"); pill.textContent = salon.active ? "Attivo" : "Sospeso"; status.append(pill);
       const date = document.createElement("td"); date.textContent = formatDate(salon.created_at);
@@ -162,7 +165,7 @@ main{max-width:1180px;margin:42px auto;padding:0 24px}.eyebrow{font-size:11px;le
         finally { invite.disabled = false; invite.textContent = "Invita titolare"; }
       });
       actions.append(edit, toggle, invite);
-      tr.append(name, contact, status, date, actions);
+      tr.append(name, contact, bookings, status, date, actions);
       $("salonRows").append(tr);
     });
   }
