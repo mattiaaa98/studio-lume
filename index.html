@@ -3766,7 +3766,17 @@ if(view==='statistics'){
     const to = $('statsEnd').value;
     const target = $('statsResults');
     if(!from || !to || from > to){ target.innerHTML='<div class="panel">Seleziona un intervallo di date valido.</div>'; return; }
-    const filteredAppointments = appointments.filter(a=>a.date>=from && a.date<=to && a.status!=='cancelled');
+    const periodAppointments = appointments.filter(a=>a.date>=from && a.date<=to);
+    const filteredAppointments = periodAppointments.filter(a=>a.status!=='cancelled');
+    const cancelledCount = periodAppointments.filter(a=>a.status==='cancelled').length;
+    const noShowCount = periodAppointments.filter(a=>a.status==='no_show').length;
+    const clientCounts = new Map();
+    periodAppointments.filter(a=>a.status!=='cancelled').forEach(a=>{const key=a.customer_id||a.phone||a.name;clientCounts.set(key,(clientCounts.get(key)||0)+1);});
+    const uniqueClients = clientCounts.size;
+    const returningClients = [...clientCounts.values()].filter(count=>count>1).length;
+    const serviceCounts = new Map();
+    filteredAppointments.forEach(a=>serviceCounts.set(a.service||'Servizio',(serviceCounts.get(a.service||'Servizio')||0)+1));
+    const topService = [...serviceCounts.entries()].sort((a,b)=>b[1]-a[1])[0];
     const filteredExpenses = expenses.filter(e=>e.expense_date>=from && e.expense_date<=to);
     const paid = filteredAppointments.filter(a=>a.payment_status==='paid').reduce((sum,a)=>sum+Number(a.price||0),0);
     const unpaid = filteredAppointments.filter(a=>a.payment_status!=='paid').reduce((sum,a)=>sum+Number(a.price||0),0);
@@ -3788,6 +3798,12 @@ if(view==='statistics'){
     const groupLabel = key => mode==='month' ? new Date(key+'-15T12:00:00').toLocaleDateString('it-IT',{month:'long',year:'numeric'}) : mode==='week' ? `Settimana dal ${safeDate(key)}` : safeDate(key);
     const rows = [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([key,g])=>`<tr><td>${escapeHtml(groupLabel(key))}</td><td>${money(g.paid)}</td><td>${money(g.unpaid)}</td><td>${money(g.cost)}</td><td><strong>${money(g.paid-g.cost)}</strong></td></tr>`).join('');
     target.innerHTML = `
+      <div class="panel" style="margin-bottom:16px"><div class="eyebrow">Andamento operativo</div><div class="stats-grid">
+        <div class="stats-card"><div class="stats-label">Prenotazioni totali</div><div class="stats-value">${periodAppointments.length}</div></div>
+        <div class="stats-card"><div class="stats-label">Clienti distinti</div><div class="stats-value">${uniqueClients}</div></div>
+        <div class="stats-card"><div class="stats-label">Clienti abituali</div><div class="stats-value">${returningClients}</div></div>
+        <div class="stats-card"><div class="stats-label">Cancellati / assenti</div><div class="stats-value">${cancelledCount} / ${noShowCount}</div></div>
+      </div><p class="mini" style="margin-top:12px">Servizio più richiesto: <strong>${topService?escapeHtml(topService[0])+' ('+topService[1]+' prenotazioni)':'nessun dato'}</strong>. I clienti abituali sono quelli con più di una prenotazione nel periodo selezionato.</p></div>
       <div class="stats-grid">
         <div class="stats-card"><div class="stats-label">Incassi effettivi</div><div class="stats-value">${money(paid)}</div></div>
         <div class="stats-card"><div class="stats-label">Da incassare</div><div class="stats-value">${money(unpaid)}</div></div>
