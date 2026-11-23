@@ -1579,15 +1579,29 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     const backgroundColor2 = /^#[0-9a-f]{6}$/i.test(data?.background_color_2 || '') ? data.background_color_2 : '#f1f5f9';
     const backgroundMode = ['color','gradient','image'].includes(data?.background_mode) ? data.background_mode : 'color';
     const backgroundImage = typeof data?.background_image_url === 'string' && /^https:\/\//i.test(data.background_image_url.trim()) ? data.background_image_url.trim() : '';
+    let pageBackgroundImage = 'none';
     if(backgroundMode === 'gradient'){
-      document.body.style.backgroundImage = `linear-gradient(135deg, ${backgroundColor}, ${backgroundColor2})`;
-      document.body.style.backgroundColor = backgroundColor;
+      pageBackgroundImage = `linear-gradient(135deg, ${backgroundColor}, ${backgroundColor2})`;
     }else if(backgroundMode === 'image' && backgroundImage){
-      document.body.style.backgroundImage = `linear-gradient(rgba(255,255,255,.78), rgba(255,255,255,.78)), url(${JSON.stringify(backgroundImage)})`;
-      document.body.style.backgroundColor = backgroundColor;
-    }else{
-      document.body.style.backgroundImage = 'none';
-      document.body.style.backgroundColor = backgroundColor;
+      pageBackgroundImage = `linear-gradient(rgba(255,255,255,.78), rgba(255,255,255,.78)), url(${JSON.stringify(backgroundImage)})`;
+    }
+    // Applica lo sfondo all'intera pagina pubblica, non solo all'anteprima dell'area titolare.
+    // Il colore di base viene aggiornato anche per la barra superiore traslucida.
+    document.documentElement.style.setProperty('--bg', backgroundColor);
+    document.documentElement.style.setProperty('--page-background-color', backgroundColor);
+    document.documentElement.style.setProperty('--page-background-image', pageBackgroundImage);
+    [document.documentElement, document.body].forEach(element => {
+      element.style.backgroundColor = backgroundColor;
+      element.style.backgroundImage = pageBackgroundImage;
+      element.style.backgroundRepeat = 'no-repeat';
+      element.style.backgroundSize = 'cover';
+      element.style.backgroundPosition = 'center top';
+      element.style.backgroundAttachment = 'fixed';
+    });
+    const publicView = document.getElementById('clientView');
+    if(publicView) {
+      publicView.style.backgroundColor = 'transparent';
+      publicView.style.backgroundImage = 'none';
     }
 
     const logoUrl = typeof data?.logo_url === 'string' ? data.logo_url.trim() : '';
