@@ -4062,8 +4062,33 @@ if(view==='staff'){
 if(view==='branding'){
   $('dashTitle').textContent = 'Personalizza sito';
   content.innerHTML = '<div class="panel"><p class="mini">Caricamento personalizzazione…</p></div>';
-  const salonId = currentProfile?.salon_id;
-  if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
+  const {data:{user:brandingUser}} = await supabaseClient.auth.getUser();
+  const {data: memberships, error:membershipError} = await supabaseClient.from('salon_memberships')
+    .select('salon_id').eq('user_id',brandingUser?.id).eq('role','owner');
+  if(membershipError || !memberships?.length){
+    console.error('Errore lettura saloni associati:',membershipError);
+    content.innerHTML = '<div class="panel">Non riesco a trovare i saloni associati al tuo account.</div>';
+    return;
+  }
+  const ownerSalonIds = [...new Set(memberships.map(item=>item.salon_id))];
+  const {data: ownerSalons, error:ownerSalonsError} = await supabaseClient.from('salons')
+    .select('id,name').in('id',ownerSalonIds).order('name');
+  if(ownerSalonsError || !ownerSalons?.length){
+    console.error('Errore lettura elenco saloni:',ownerSalonsError);
+    content.innerHTML = '<div class="panel">Non riesco a caricare i saloni del tuo account.</div>';
+    return;
+  }
+  let salonId = ownerSalons.some(item=>item.id===window.brandingSalonId)
+    ? window.brandingSalonId
+    : (ownerSalons.some(item=>item.id===currentProfile?.salon_id) ? currentProfile.salon_id : ownerSalons[0].id);
+  window.brandingSalonId = salonId;
+  const salonSelectorHtml = ownerSalons.length>1 ? `
+    <div style="margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)">
+      <label for="brandingSalonSelector" style="margin-top:0">Stai personalizzando il salone</label>
+      <select id="brandingSalonSelector" style="width:100%">
+        ${ownerSalons.map(item=>'<option value="'+escapeHtml(item.id)+'" '+(item.id===salonId?'selected':'')+'>'+escapeHtml(item.name)+'</option>').join('')}
+      </select>
+    </div>` : '';
 
   const {data: salon, error} = await supabaseClient.from('salons')
     .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,background_mode,background_color,background_color_2,background_image_url,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
@@ -4080,6 +4105,7 @@ if(view==='branding'){
       <div class="eyebrow">Identità del tuo salone</div>
       <h3 style="font:500 27px Georgia,serif;margin:8px 0">Personalizza il tuo sito</h3>
       <p class="mini" style="font-size:14px;line-height:1.6">Le modifiche riguardano solo il sito di questo salone. Puoi cambiare logo, immagine, colori e testi in qualsiasi momento.</p>
+      ${salonSelectorHtml}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:20px">
         <div>
           <label for="brandNameInput">Nome del salone</label>
@@ -4155,6 +4181,12 @@ if(view==='branding'){
       <div id="brandingError" class="mini" role="alert" style="color:#a33a32;margin-top:8px"></div>
     </div>`;
 
+  if(ownerSalons.length>1){
+    $('brandingSalonSelector').onchange=()=>{
+      window.brandingSalonId=$('brandingSalonSelector').value;
+      renderAdmin('branding');
+    };
+  }
   const uploaded = {logo_url:salon.logo_url||'',cover_image_url:salon.cover_image_url||'',background_image_url:salon.background_image_url||''};
   const previewColors = ()=>{
     $('brandPreviewPrimary').style.background=$('brandPrimaryInput').value;
@@ -4241,6 +4273,7 @@ if(view==='branding'){
       const {error:updateError}=await supabaseClient.from('salons').update(payload).eq('id',salonId);
       if(updateError) throw updateError;
       await loadSalonBranding(salonId);
+      window.brandingSalonId=salonId;
       toast('Personalizzazione salvata.');
       renderAdmin('branding');
     }catch(error){
