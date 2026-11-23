@@ -60,6 +60,8 @@ body{
 }
 .brand-main{color:var(--accent);}.brand-logo{width:34px;height:34px;object-fit:contain;border-radius:7px;display:none;align-self:center;}
 .brand-sub{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:800;letter-spacing:.11em;color:var(--barber-red);}
+/* Lo sfondo pubblico è personalizzato separatamente per ogni salone. */
+body{background-color:var(--bg);background-repeat:no-repeat;background-size:cover;background-position:center;background-attachment:fixed;}
 @media(max-width:560px){.brand{display:flex;flex-direction:column;gap:0;font-size:19px;line-height:1}.brand-sub{font-size:9px;letter-spacing:.09em}.header{padding:0 4vw;}}
 
 .nav{
@@ -1572,6 +1574,21 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     const accent = /^#[0-9a-f]{6}$/i.test(data?.accent_color || '') ? data.accent_color : '#d62839';
     document.documentElement.style.setProperty('--accent', primary);
     document.documentElement.style.setProperty('--barber-red', accent);
+
+    const backgroundColor = /^#[0-9a-f]{6}$/i.test(data?.background_color || '') ? data.background_color : '#ffffff';
+    const backgroundColor2 = /^#[0-9a-f]{6}$/i.test(data?.background_color_2 || '') ? data.background_color_2 : '#f1f5f9';
+    const backgroundMode = ['color','gradient','image'].includes(data?.background_mode) ? data.background_mode : 'color';
+    const backgroundImage = typeof data?.background_image_url === 'string' && /^https:\/\//i.test(data.background_image_url.trim()) ? data.background_image_url.trim() : '';
+    if(backgroundMode === 'gradient'){
+      document.body.style.backgroundImage = `linear-gradient(135deg, ${backgroundColor}, ${backgroundColor2})`;
+      document.body.style.backgroundColor = backgroundColor;
+    }else if(backgroundMode === 'image' && backgroundImage){
+      document.body.style.backgroundImage = `linear-gradient(rgba(255,255,255,.78), rgba(255,255,255,.78)), url(${JSON.stringify(backgroundImage)})`;
+      document.body.style.backgroundColor = backgroundColor;
+    }else{
+      document.body.style.backgroundImage = 'none';
+      document.body.style.backgroundColor = backgroundColor;
+    }
 
     const logoUrl = typeof data?.logo_url === 'string' ? data.logo_url.trim() : '';
     if(brandLogo && /^https:\/\//i.test(logoUrl)){
@@ -4035,7 +4052,7 @@ if(view==='branding'){
   if(!salonId){ content.innerHTML = '<div class="panel">Non riesco a identificare il salone.</div>'; return; }
 
   const {data: salon, error} = await supabaseClient.from('salons')
-    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
+    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,background_mode,background_color,background_color_2,background_image_url,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
     .eq('id',salonId).single();
   if(error || !salon){
     console.error('Errore caricamento personalizzazione:',error);
@@ -4078,6 +4095,26 @@ if(view==='branding'){
           <div style="display:flex;align-items:center;gap:12px"><input id="brandPrimaryInput" type="color" value="${safeColor(salon.primary_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Pulsanti e dettagli principali</span></div>
           <label for="brandAccentInput">Colore secondario</label>
           <div style="display:flex;align-items:center;gap:12px"><input id="brandAccentInput" type="color" value="${safeColor(salon.accent_color)}" style="width:72px;height:48px;padding:4px"><span class="mini">Slogan e dettagli grafici</span></div>
+          <div style="margin-top:20px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)">
+            <strong>Personalizza lo sfondo</strong>
+            <p class="mini" style="margin:6px 0 10px">Scegli un colore, una sfumatura o una tua immagine. Le schede e i testi restano leggibili.</p>
+            <label for="brandBackgroundMode">Tipo di sfondo</label>
+            <select id="brandBackgroundMode" style="width:100%">
+              <option value="color" ${salon.background_mode==='color'?'selected':''}>Colore uniforme</option>
+              <option value="gradient" ${salon.background_mode==='gradient'?'selected':''}>Sfumatura a due colori</option>
+              <option value="image" ${salon.background_mode==='image'?'selected':''}>Immagine</option>
+            </select>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+              <div><label for="brandBackgroundColor">Colore sfondo</label><input id="brandBackgroundColor" type="color" value="${safeColor(salon.background_color||'#ffffff')}" style="width:72px;height:48px;padding:4px"></div>
+              <div id="backgroundColor2Wrap"><label for="brandBackgroundColor2">Secondo colore</label><input id="brandBackgroundColor2" type="color" value="${safeColor(salon.background_color_2||'#f1f5f9')}" style="width:72px;height:48px;padding:4px"></div>
+            </div>
+            <div id="backgroundImageWrap" style="margin-top:10px">
+              <label for="brandBackgroundFile">Immagine di sfondo</label>
+              <input id="brandBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp">
+              <div id="brandBackgroundStatus" class="mini">${salon.background_image_url?'Immagine di sfondo attualmente caricata.':'Nessuna immagine caricata.'}</div>
+            </div>
+            <div id="brandBackgroundPreview" style="height:86px;border:1px solid var(--line);border-radius:12px;margin-top:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#17202a;text-shadow:0 1px 2px #fff;background:${safeColor(salon.background_color||'#ffffff')}">Anteprima sfondo</div>
+          </div>
           <label for="brandInstagramInput">Instagram (link completo)</label><input id="brandInstagramInput" type="url" maxlength="300" value="${escapeHtml(salon.instagram_url||'')}" placeholder="https://instagram.com/tuosalone">
           <label for="brandFacebookInput">Facebook (link completo)</label><input id="brandFacebookInput" type="url" maxlength="300" value="${escapeHtml(salon.facebook_url||'')}" placeholder="https://facebook.com/tuosalone">
           <label for="brandTiktokInput">TikTok (link completo)</label><input id="brandTiktokInput" type="url" maxlength="300" value="${escapeHtml(salon.tiktok_url||'')}" placeholder="https://tiktok.com/@tuosalone">
@@ -4104,13 +4141,28 @@ if(view==='branding'){
       <div id="brandingError" class="mini" role="alert" style="color:#a33a32;margin-top:8px"></div>
     </div>`;
 
-  const uploaded = {logo_url:salon.logo_url||'',cover_image_url:salon.cover_image_url||''};
+  const uploaded = {logo_url:salon.logo_url||'',cover_image_url:salon.cover_image_url||'',background_image_url:salon.background_image_url||''};
   const previewColors = ()=>{
     $('brandPreviewPrimary').style.background=$('brandPrimaryInput').value;
     $('brandPreviewAccent').style.color=$('brandAccentInput').value;
   };
   $('brandPrimaryInput').oninput=previewColors;
   $('brandAccentInput').oninput=previewColors;
+  const previewBackground = ()=>{
+    const mode=$('brandBackgroundMode').value;
+    const color=$('brandBackgroundColor').value;
+    const color2=$('brandBackgroundColor2').value;
+    const preview=$('brandBackgroundPreview');
+    $('backgroundColor2Wrap').style.display=mode==='gradient'?'block':'none';
+    $('backgroundImageWrap').style.display=mode==='image'?'block':'none';
+    if(mode==='gradient') preview.style.background=`linear-gradient(135deg,${color},${color2})`;
+    else if(mode==='image' && uploaded.background_image_url) preview.style.background=`linear-gradient(rgba(255,255,255,.68),rgba(255,255,255,.68)),url(${JSON.stringify(uploaded.background_image_url)}) center/cover`;
+    else preview.style.background=color;
+  };
+  $('brandBackgroundMode').onchange=previewBackground;
+  $('brandBackgroundColor').oninput=previewBackground;
+  $('brandBackgroundColor2').oninput=previewBackground;
+  previewBackground();
 
   const uploadBrandImage = async(file,kind)=>{
     if(!file) return;
@@ -4135,6 +4187,12 @@ if(view==='branding'){
     try{uploaded.cover_image_url=await uploadBrandImage(file,'cover');$('brandCoverPreview').src=uploaded.cover_image_url;$('brandCoverPreview').style.display='block';$('brandCoverStatus').textContent='Immagine caricata. Premi “Salva personalizzazione” per pubblicarla.';}
     catch(error){$('brandCoverStatus').textContent=error.message||'Errore caricamento immagine.';}
   };
+  $('brandBackgroundFile').onchange=async()=>{
+    const file=$('brandBackgroundFile').files?.[0];if(!file)return;
+    $('brandBackgroundStatus').textContent='Caricamento sfondo…';
+    try{uploaded.background_image_url=await uploadBrandImage(file,'background');$('brandBackgroundStatus').textContent='Immagine caricata. Premi “Salva personalizzazione” per pubblicarla.';previewBackground();}
+    catch(error){$('brandBackgroundStatus').textContent=error.message||'Errore caricamento immagine.';}
+  };
 
   $('saveBranding').onclick=async()=>{
     const button=$('saveBranding'),errorBox=$('brandingError');
@@ -4145,6 +4203,10 @@ if(view==='branding'){
         logo_url:uploaded.logo_url||null,
         primary_color:$('brandPrimaryInput').value,
         accent_color:$('brandAccentInput').value,
+        background_mode:$('brandBackgroundMode').value,
+        background_color:$('brandBackgroundColor').value,
+        background_color_2:$('brandBackgroundColor2').value,
+        background_image_url:uploaded.background_image_url||null,
         slogan:$('brandSloganInput').value.trim()||null,
         hero_title:$('brandHeroTitleInput').value.trim()||null,
         hero_description:$('brandHeroDescriptionInput').value.trim()||null,
