@@ -572,20 +572,11 @@ input{
 
 .dayhead{
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  justify-content:flex-start;
-  gap:2px;
+  align-items:center;
+  justify-content:space-between;
   font-weight:800;
   font-size:14px;
   margin-bottom:9px;
-}
-.day-availability{
-  font-size:10px;
-  color:var(--muted);
-  font-weight:700;
-  line-height:1.2;
-  white-space:nowrap;
 }
 
 .day-number{
@@ -717,6 +708,20 @@ table td{
   min-height:36px;
   cursor:pointer;
 }
+.booking-day{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:4px 1px;
+  min-width:0;
+}
+.booking-day-number{font-weight:700;line-height:1.1}
+.booking-day-count{font-size:9px;line-height:1.1;color:var(--muted);white-space:nowrap}
+.booking-day.selected .booking-day-count,.booking-day:hover:not(:disabled) .booking-day-count{color:inherit}
+.booking-day:disabled{opacity:.38;cursor:not-allowed}
+.booking-day-unavailable{opacity:.35}
 .booking-day:hover:not(:disabled),
 .booking-day.selected{
   background:var(--accent);
@@ -879,9 +884,9 @@ table td{
   }
   .calendar-weekday{padding:5px 0;text-align:center;font-size:9px;letter-spacing:0}
   .day{min-width:0;min-height:78px;padding:4px;border-radius:8px;box-shadow:none}
-  .dayhead{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;font-size:11px;gap:1px;margin-bottom:4px}
+  .dayhead{display:block;text-align:center;font-size:11px;margin-bottom:4px}
   .day-number{width:24px;height:24px;margin:0 auto}
-  .day-availability{font-size:8px;white-space:normal;line-height:1.1}
+  .day-count{display:none}
   .appt{padding:4px 3px;margin-bottom:3px;border-left-width:2px;border-radius:5px;font-size:9px;line-height:1.2;overflow:hidden}
   .appt b{font-size:9px;line-height:1.2;overflow-wrap:anywhere;margin:0}
   .appt>div,.appt .mini{display:none}
@@ -2034,6 +2039,7 @@ selectedTime =
 updateSummary();
 
 renderTimes();
+renderBookingCalendar();
 
 };
 
@@ -2202,7 +2208,7 @@ function renderBookingCalendar(){
     const selectedClass = $('date').value===key ? 'selected' : '';
     const closure = salonClosures.some(c=>key>=c.start_date && key<=c.end_date);
     const reason = closure ? 'Chiuso per ferie o chiusura del salone' : '';
-    cells += `<button type="button" class="booking-day ${selectedClass}" data-booking-date="${key}" ${disabled?'disabled':''} ${disabled&&reason?`title="${escapeHtml(reason)}"`:''}>${day}</button>`;
+    cells += `<button type="button" class="booking-day ${selectedClass}" data-booking-date="${key}" data-booking-availability="${key}" ${disabled?'disabled':''} ${disabled&&reason?`title="${escapeHtml(reason)}"`:''}><span class="booking-day-number">${day}</span><span class="booking-day-count" aria-label="Orari disponibili"></span></button>`;
   }
   container.innerHTML = `
     <div class="booking-calendar-toolbar">
@@ -2222,6 +2228,7 @@ function renderBookingCalendar(){
     bookingCalendarMonth = new Date(year,month+1,1);
     renderBookingCalendar();
   };
+  populateBookingMonthAvailability(year,month);
   container.querySelectorAll('[data-booking-date]').forEach(button=>{
     button.onclick = ()=>{
       const key = button.dataset.bookingDate;
@@ -2236,6 +2243,42 @@ function renderBookingCalendar(){
   });
 }
 
+async function populateBookingMonthAvailability(year,month){
+  const requestId=(window.bookingAvailabilityRequestId||0)+1;
+  window.bookingAvailabilityRequestId=requestId;
+  const stylist=($('stylist')?.value||'').split(' · ')[0].trim();
+  const durationMinutes=parseInt(String(selected?.dur||'30'),10)||30;
+  if(!stylist||!selected)return;
+  const dates=[];
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const todayKey=today();
+  for(let day=1;day<=daysInMonth;day++){
+    const key=dateKeyFromDate(new Date(year,month,day));
+    if(key>=todayKey&&!isSalonClosed(key))dates.push(key);
+  }
+  const results=await Promise.all(dates.map(async key=>{
+    const {data,error}=await supabaseClient.rpc('get_public_available_times',{
+      p_salon_id:PUBLIC_SALON_ID,
+      p_staff_name:stylist,
+      p_date:key,
+      p_duration_minutes:durationMinutes
+    });
+    if(error){console.error('Errore disponibilità calendario cliente:',error);return {key,count:0};}
+    return {key,count:(data||[]).length};
+  }));
+  if(requestId!==window.bookingAvailabilityRequestId||year!==bookingCalendarMonth.getFullYear()||month!==bookingCalendarMonth.getMonth())return;
+  results.forEach(({key,count})=>{
+    const button=document.querySelector(`[data-booking-availability="${key}"]`);
+    if(!button)return;
+    const label=button.querySelector('.booking-day-count');
+    if(label)label.textContent=count>0?(count+' '+(count===1?'orario':'orari')):'';
+    if(count===0){
+      button.disabled=true;
+      button.title='Nessun orario prenotabile per il servizio e il professionista selezionati';
+      button.classList.add('booking-day-unavailable');
+    }
+  });
+}
 async function loadPublicClosures(){
   const {data,error} = await supabaseClient.rpc('get_public_salon_closures',{p_salon_id:PUBLIC_SALON_ID});
   if(error){
@@ -2272,6 +2315,7 @@ hideBookingConfirmation();
 renderTimes();
 
 updateSummary();
+renderBookingCalendar();
 
 };
 
@@ -3113,47 +3157,6 @@ function bindAgendaStaffFilter(){
   const select=$('agendaStaffFilter');
   if(select)select.onchange=()=>{window.agendaStaffFilter=select.value;renderAdmin('agenda');};
 }
-async function populateMonthAvailability(year,month){
-  const requestId=(window.monthAvailabilityRequestId||0)+1;
-  window.monthAvailabilityRequestId=requestId;
-  const todayKey=romeDateKey(new Date());
-  const durations=services.map(s=>parseInt(String(s.dur||''),10)||60).filter(n=>n>0);
-  const durationMinutes=durations.length?Math.min(...durations):null;
-  const selectedStaff=window.agendaStaffFilter||'all';
-  const staffToCheck=selectedStaff==='all'?staffMembers:staffMembers.filter(s=>s.id===selectedStaff);
-  const daysInMonth=new Date(year,month+1,0).getDate();
-  if(!durationMinutes||!staffToCheck.length)return;
-  const dates=[];
-  for(let day=1;day<=daysInMonth;day++){
-    const dateKey=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-    if(dateKey>=todayKey)dates.push(dateKey);
-  }
-  const requests=dates.flatMap(dateKey=>staffToCheck.map(async staff=>{
-    const {data,error}=await supabaseClient.rpc('get_public_available_times',{
-      p_salon_id:currentProfile?.salon_id,
-      p_staff_name:staff.name,
-      p_date:dateKey,
-      p_duration_minutes:durationMinutes
-    });
-    if(error){console.error('Errore conteggio disponibilità agenda:',error);return {dateKey,count:0};}
-    const now=new Date();
-    const count=(data||[]).filter(row=>{
-      const slot=String(row.slot_time||'').slice(0,5);
-      if(slot.length!==5||slot[2]!==':')return false;
-      return dateKey!==todayKey||new Date(dateKey+'T'+slot+':00')>now;
-    }).length;
-    return {dateKey,count};
-  }));
-  const results=await Promise.all(requests);
-  if(requestId!==window.monthAvailabilityRequestId||window.currentAdminView!=='agenda'||window.agendaMode==='day'||window.agendaMode==='week')return;
-  const totals={};
-  results.forEach(result=>{totals[result.dateKey]=(totals[result.dateKey]||0)+result.count;});
-  document.querySelectorAll('.day-availability[data-availability-date]').forEach(el=>{
-    const count=totals[el.dataset.availabilityDate]||0;
-    el.textContent=count>0?(count+' disponibilità'):'';
-    el.title=count>0?'Orari prenotabili per il servizio più breve':'Nessuna disponibilità';
-  });
-}
 function appointmentStatusLabel(status){
   const labels={confirmed:'Confermato',completed:'Completato',cancelled:'Annullato',no_show:'Assente',pending:'In attesa'};
   return labels[status]||status||'Da definire';
@@ -3510,7 +3513,7 @@ ${isToday?'today':''}"
 ${dayNumber}
 </span>
 
-${isCurrentMonth ? `<span class="day-availability" data-availability-date="${dateKey}" aria-label="Disponibilità ancora prenotabili"></span>` : ''}
+${list.length ? `<span class="day-count">${list.length} app.</span>` : ''}
 
 </div>
 
@@ -3566,7 +3569,6 @@ Nessun appuntamento
 
 /* CAMBIO VISTA GIORNO / SETTIMANA / MESE */
 bindAgendaStaffFilter();
-populateMonthAvailability(year,month);
 document.querySelectorAll('[data-agenda-mode]').forEach(button=>{button.onclick=()=>{window.agendaMode=button.dataset.agendaMode;window.agendaDate=new Date();window.agendaMonth=new Date();window.agendaMonth.setDate(1);renderAdmin('agenda');};});
 /* NAVIGAZIONE MESI */
 
