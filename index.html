@@ -25,14 +25,17 @@
 
 body{
   margin:0;
+  isolation:isolate;
   background:var(--bg);
   color:var(--text);
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
 }
 
-.app{
+ .app{
   min-height:100vh;
-}
+  position:relative;
+} 
+#salonParallaxBackground{position:fixed;inset:-8%;z-index:-1;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:transform;opacity:1;}
 
 .header{
   height:72px;
@@ -1579,12 +1582,23 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     const backgroundColor2 = /^#[0-9a-f]{6}$/i.test(data?.background_color_2 || '') ? data.background_color_2 : '#f1f5f9';
     const backgroundMode = ['color','gradient','image'].includes(data?.background_mode) ? data.background_mode : 'color';
     const backgroundImage = typeof data?.background_image_url === 'string' && /^https:\/\//i.test(data.background_image_url.trim()) ? data.background_image_url.trim() : '';
+    const parallaxEnabled = data?.background_parallax_enabled === true && backgroundMode === 'image' && !!backgroundImage;
+    const parallaxStrength = Math.max(0, Math.min(100, Number(data?.background_parallax_strength ?? 35)));
     let pageBackgroundImage = 'none';
     if(backgroundMode === 'gradient'){
       pageBackgroundImage = `linear-gradient(135deg, ${backgroundColor}, ${backgroundColor2})`;
-    }else if(backgroundMode === 'image' && backgroundImage){
+    }else if(backgroundMode === 'image' && backgroundImage && !parallaxEnabled){
       pageBackgroundImage = `linear-gradient(rgba(255,255,255,.78), rgba(255,255,255,.78)), url(${JSON.stringify(backgroundImage)})`;
     }
+    let parallaxLayer = document.getElementById('salonParallaxBackground');
+    if(parallaxEnabled){
+      if(!parallaxLayer){ parallaxLayer=document.createElement('div'); parallaxLayer.id='salonParallaxBackground'; document.body.prepend(parallaxLayer); }
+      parallaxLayer.style.backgroundImage = `linear-gradient(rgba(255,255,255,.24), rgba(255,255,255,.24)), url(${JSON.stringify(backgroundImage)})`;
+      parallaxLayer.dataset.strength = String(parallaxStrength);
+      const moveParallax = ()=>{ if(!parallaxLayer?.isConnected) return; const offset=Math.min(window.scrollY,1600)*parallaxStrength*0.12; parallaxLayer.style.transform=`translate3d(0,${-offset}px,0)`; };
+      if(!window.salonParallaxHandler){ window.salonParallaxHandler=moveParallax; window.addEventListener('scroll',moveParallax,{passive:true}); window.addEventListener('resize',moveParallax); }
+      moveParallax();
+    }else if(parallaxLayer){ parallaxLayer.remove(); }
     // Applica lo sfondo all'intera pagina pubblica, non solo all'anteprima dell'area titolare.
     // Il colore di base viene aggiornato anche per la barra superiore traslucida.
     document.documentElement.style.setProperty('--bg', backgroundColor);
@@ -4091,7 +4105,7 @@ if(view==='branding'){
     </div>` : '';
 
   const {data: salon, error} = await supabaseClient.from('salons')
-    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,background_mode,background_color,background_color_2,background_image_url,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
+    .select('id,name,phone,email,address,instagram_url,facebook_url,tiktok_url,website_url,logo_url,primary_color,accent_color,background_mode,background_color,background_color_2,background_image_url,background_parallax_enabled,background_parallax_strength,slogan,hero_title,hero_description,cover_image_url,about_text,show_staff_section,show_hours_section,show_social_section')
     .eq('id',salonId).single();
   if(error || !salon){
     console.error('Errore caricamento personalizzazione:',error);
@@ -4152,6 +4166,13 @@ if(view==='branding'){
               <label for="brandBackgroundFile">Immagine di sfondo</label>
               <input id="brandBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp">
               <div id="brandBackgroundStatus" class="mini">${salon.background_image_url?'Immagine di sfondo attualmente caricata.':'Nessuna immagine caricata.'}</div>
+              <div style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+                <label style="display:flex;align-items:center;gap:9px"><input id="brandParallaxEnabled" type="checkbox" ${salon.background_parallax_enabled?'checked':''}> <strong>Sfondo 3D immersivo con parallasse</strong></label>
+                <p class="mini" style="margin:5px 0 10px">L'immagine si muove delicatamente mentre il cliente scorre la pagina.</p>
+                <label for="brandParallaxStrength">Intensità effetto: <span id="brandParallaxStrengthValue">${Number(salon.background_parallax_strength??35)}%</span></label>
+                <input id="brandParallaxStrength" type="range" min="0" max="100" value="${Number(salon.background_parallax_strength??35)}" style="width:100%">
+                <div class="mini">Disponibile quando scegli un'immagine di sfondo.</div>
+              </div>
             </div>
             <div id="brandBackgroundPreview" style="height:86px;border:1px solid var(--line);border-radius:12px;margin-top:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#17202a;text-shadow:0 1px 2px #fff;background:${safeColor(salon.background_color||'#ffffff')}">Anteprima sfondo</div>
           </div>
@@ -4208,6 +4229,8 @@ if(view==='branding'){
   $('brandBackgroundMode').onchange=previewBackground;
   $('brandBackgroundColor').oninput=previewBackground;
   $('brandBackgroundColor2').oninput=previewBackground;
+  $('brandParallaxStrength').oninput=()=>{ $('brandParallaxStrengthValue').textContent=$('brandParallaxStrength').value+'%'; };
+  $('brandParallaxEnabled').onchange=()=>{ if($('brandParallaxEnabled').checked && !uploaded.background_image_url){ $('brandBackgroundMode').value='image'; $('brandBackgroundStatus').textContent='Carica un’immagine per attivare il parallasse.'; previewBackground(); } };
   previewBackground();
 
   const uploadBrandImage = async(file,kind)=>{
@@ -4253,6 +4276,8 @@ if(view==='branding'){
         background_color:$('brandBackgroundColor').value,
         background_color_2:$('brandBackgroundColor2').value,
         background_image_url:uploaded.background_image_url||null,
+        background_parallax_enabled:$('brandParallaxEnabled').checked,
+        background_parallax_strength:Number($('brandParallaxStrength').value),
         slogan:$('brandSloganInput').value.trim()||null,
         hero_title:$('brandHeroTitleInput').value.trim()||null,
         hero_description:$('brandHeroDescriptionInput').value.trim()||null,
