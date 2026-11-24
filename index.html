@@ -35,7 +35,13 @@ body{
   min-height:100vh;
   position:relative;
 } 
-#salonParallaxBackground{position:fixed;inset:-8%;z-index:-1;pointer-events:none;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:transform;opacity:1;}
+#salonParallaxBackground{position:fixed;inset:0;z-index:-1;pointer-events:none;perspective:1100px;overflow:hidden;isolation:isolate;}
+.salon-parallax-plane{position:absolute;inset:-10%;background-position:center;background-size:cover;background-repeat:no-repeat;will-change:transform;transform-style:preserve-3d;}
+.salon-parallax-back{filter:saturate(1.08) contrast(1.04);opacity:1;}
+.salon-parallax-mid{opacity:.22;filter:blur(1px) saturate(1.12);mask-image:linear-gradient(to bottom,transparent 24%,rgba(0,0,0,.12) 42%,#000 88%);}
+.salon-parallax-front{opacity:.16;filter:blur(2px) brightness(1.08);mask-image:linear-gradient(to bottom,transparent 52%,rgba(0,0,0,.2) 68%,#000 100%);}
+.salon-parallax-atmosphere{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%,transparent 28%,rgba(18,24,34,.13) 100%),linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.3));pointer-events:none;}
+@media(prefers-reduced-motion:reduce){.salon-parallax-plane{will-change:auto;}}
 
 .header{
   height:72px;
@@ -1592,12 +1598,34 @@ async function loadSalonBranding(salonId = PUBLIC_SALON_ID){
     }
     let parallaxLayer = document.getElementById('salonParallaxBackground');
     if(parallaxEnabled){
-      if(!parallaxLayer){ parallaxLayer=document.createElement('div'); parallaxLayer.id='salonParallaxBackground'; document.body.prepend(parallaxLayer); }
-      parallaxLayer.style.backgroundImage = `linear-gradient(rgba(255,255,255,.24), rgba(255,255,255,.24)), url(${JSON.stringify(backgroundImage)})`;
+      if(!parallaxLayer){
+        parallaxLayer=document.createElement('div');
+        parallaxLayer.id='salonParallaxBackground';
+        parallaxLayer.innerHTML='<div class="salon-parallax-plane salon-parallax-back"></div><div class="salon-parallax-plane salon-parallax-mid"></div><div class="salon-parallax-plane salon-parallax-front"></div><div class="salon-parallax-atmosphere"></div>';
+        document.body.prepend(parallaxLayer);
+      }
       parallaxLayer.dataset.strength = String(parallaxStrength);
-      const moveParallax = ()=>{ if(!parallaxLayer?.isConnected) return; const offset=Math.min(window.scrollY,1600)*parallaxStrength*0.12; parallaxLayer.style.transform=`translate3d(0,${-offset}px,0)`; };
-      if(!window.salonParallaxHandler){ window.salonParallaxHandler=moveParallax; window.addEventListener('scroll',moveParallax,{passive:true}); window.addEventListener('resize',moveParallax); }
-      moveParallax();
+      parallaxLayer.querySelectorAll('.salon-parallax-plane').forEach(plane=>{
+        plane.style.backgroundImage=`linear-gradient(rgba(255,255,255,.12), rgba(255,255,255,.12)), url(${JSON.stringify(backgroundImage)})`;
+      });
+      if(!window.salonParallaxHandler){
+        window.salonParallaxHandler=()=>{
+          const scene=document.getElementById('salonParallaxBackground');
+          if(!scene || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          const strength=Math.max(0,Math.min(100,Number(scene.dataset.strength||35)))/100;
+          const progress=Math.min(window.scrollY,1800)/1800;
+          const travel=strength*58;
+          const tilt=progress*1.35*strength;
+          const planes=scene.querySelectorAll('.salon-parallax-plane');
+          if(planes[0]) planes[0].style.transform=`translate3d(0,${-travel*0.28*progress}px,-35px) scale(1.08)`;
+          if(planes[1]) planes[1].style.transform=`translate3d(0,${-travel*0.68*progress}px,18px) scale(1.12)`;
+          if(planes[2]) planes[2].style.transform=`translate3d(0,${-travel*1.12*progress}px,55px) scale(1.16)`;
+          scene.style.transform=`perspective(1100px) rotateX(${tilt}deg)`;
+        };
+        window.addEventListener('scroll',window.salonParallaxHandler,{passive:true});
+        window.addEventListener('resize',window.salonParallaxHandler);
+      }
+      window.salonParallaxHandler();
     }else if(parallaxLayer){ parallaxLayer.remove(); }
     // Applica lo sfondo all'intera pagina pubblica, non solo all'anteprima dell'area titolare.
     // Il colore di base viene aggiornato anche per la barra superiore traslucida.
