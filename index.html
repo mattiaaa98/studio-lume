@@ -3139,7 +3139,7 @@ async function populateMonthAvailability(year,month){
     const now=new Date();
     const count=(data||[]).filter(row=>{
       const slot=String(row.slot_time||'').slice(0,5);
-      if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(slot))return false;
+      if(slot.length!==5||slot[2]!==':')return false;
       return dateKey!==todayKey||new Date(dateKey+'T'+slot+':00')>now;
     }).length;
     return {dateKey,count};
