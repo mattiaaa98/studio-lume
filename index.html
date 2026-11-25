@@ -1909,27 +1909,42 @@ element.style.display =
    PROFESSIONISTI CLIENTE
 ========================================================= */
 
-function loadDefaultStaff(){
+async function loadDefaultStaff(){
 
-const stylist =
-$('stylist');
+const stylist = $('stylist');
+if(!stylist) return;
 
-if(!stylist)
-return;
+stylist.innerHTML = '<option value="">Caricamento professionisti…</option>';
 
-if(stylist.options.length>0)
-return;
+const {data,error} = await supabaseClient.rpc(
+  'get_public_staff',
+  {p_salon_id: PUBLIC_SALON_ID}
+);
 
-stylist.innerHTML =
-defaultStaff
-.map(name=>`
+if(error){
+  console.error('Errore caricamento professionisti pubblici:', error);
+  stylist.innerHTML = '<option value="">Professionisti non disponibili</option>';
+  renderTimes();
+  renderBookingCalendar();
+  return;
+}
 
-<option value="${escapeHtml(name)}">
-${escapeHtml(name)} · Professionista
-</option>
+const names = (data || [])
+  .map(item => String(item.name || '').trim())
+  .filter(Boolean);
 
-`)
-.join('');
+if(!names.length){
+  stylist.innerHTML = '<option value="">Nessun professionista disponibile</option>';
+}else{
+  stylist.innerHTML = names.map(name => `
+    <option value="${escapeHtml(name)}">${escapeHtml(name)} · Professionista</option>
+  `).join('');
+}
+
+selectedTime = '';
+renderTimes();
+renderBookingCalendar();
+updateSummary();
 
 }
 
@@ -5011,7 +5026,7 @@ $('adminTab')
 $('clientTab')
 .classList.add('active');
 
-loadDefaultStaff();
+await loadDefaultStaff();
 await loadSalonBranding(PUBLIC_SALON_ID);
 
 await loadPublicServices();
