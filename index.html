@@ -669,6 +669,22 @@ table td{
 }
 
 /* CALENDARIO PRENOTAZIONI CON DATE BLOCCATE */
+.booking-day{
+  min-height:44px;
+}
+.date-picker-display{
+  cursor:pointer;
+  background:var(--surface);
+  border:1px solid var(--accent);
+  font-weight:700;
+}
+.date-picker-display:focus{
+  outline:2px solid color-mix(in srgb,var(--accent) 25%,transparent);
+  outline-offset:2px;
+}
+.booking-calendar-scroll{
+  width:100%;
+}
 .booking-calendar{
   margin-top:10px;
   border:1px solid var(--line);
@@ -857,6 +873,39 @@ table td{
   .service .price{
     margin-top:9px;
     font-size:14px;
+  }
+
+  /* Su smartphone: calendario scorrevole, con meno giorni visibili ma celle più grandi. */
+  .booking-calendar-scroll{
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:5px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+
+  .booking-calendar-grid{
+    min-width:460px;
+    gap:7px;
+  }
+
+  .booking-day{
+    min-height:62px;
+    border-radius:12px;
+    gap:5px;
+  }
+
+  .booking-day-number{
+    font-size:17px;
+  }
+
+  .booking-day-count{
+    font-size:10px;
+  }
+
+  .booking-calendar-weekday{
+    font-size:13px;
+    padding:9px 0;
   }
 
   /* Calendario più grande e leggibile */
@@ -1199,10 +1248,14 @@ Data dell'appuntamento
 </label>
 <input
 id="date"
+class="date-picker-display"
 type="text"
 readonly
+inputmode="none"
+autocomplete="off"
 aria-label="Data dell'appuntamento"
 placeholder="Seleziona una data dal calendario"
+title="Scegli la data direttamente dal calendario"
 >
 <div id="bookingCalendar" class="booking-calendar" aria-label="Calendario per la prenotazione"></div>
 
@@ -1383,13 +1436,13 @@ class="customer-search-grid"
 for="customerLookupName"
 style="margin-top:0"
 >
-Nome
+Nome e cognome
 </label>
 
 <input
 id="customerLookupName"
 type="text"
-placeholder="Il tuo nome"
+placeholder="Inserisci nome e cognome"
 autocomplete="name"
 >
 
@@ -2321,7 +2374,7 @@ function renderBookingCalendar(){
       <div class="booking-calendar-month">${escapeHtml(monthName)}</div>
       <button type="button" class="agenda-nav" id="bookingNextMonth" aria-label="Mese successivo">›</button>
     </div>
-    <div class="booking-calendar-grid">${cells}</div>
+    <div class="booking-calendar-scroll"><div class="booking-calendar-grid">${cells}</div></div>
     <div class="booking-calendar-legend">Le date grigie non sono prenotabili. È necessario prenotare con almeno 24 ore di anticipo; gli orari disponibili rispettano lo stesso limite.</div>
   `;
   $('bookingPrevMonth').onclick = ()=>{
@@ -2775,12 +2828,12 @@ const container =
 $('customerAppointments');
 
 
-if(!name || !phone){
+if(!name || !phone || name.split(/\\s+/).filter(Boolean).length < 2){
 
 container.innerHTML = `
 
 <div class="customer-empty">
-Inserisci nome e numero di telefono utilizzati
+Inserisci nome, cognome e numero di telefono utilizzati
 per la prenotazione.
 </div>
 
