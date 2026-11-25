@@ -2842,7 +2842,7 @@ const container =
 $('customerAppointments');
 
 
-if(!name || !phone || name.split(/\\s+/).filter(Boolean).length < 2){
+if(!name || !phone || name.split(/\s+/).filter(Boolean).length < 2){
 
 container.innerHTML = `
 
