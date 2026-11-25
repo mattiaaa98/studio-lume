@@ -4362,6 +4362,10 @@ if(view==='staff'){
     button.onclick=async()=>{
       const person=(people||[]).find(x=>x.id===button.dataset.staffToggle);
       if(!person) return;
+      if(person.active && (people||[]).filter(x=>x.active).length===1){
+        const confirmed=window.confirm('Attenzione: questo è l’ultimo professionista attivo del salone. Se lo disattivi, i clienti non potranno effettuare nuove prenotazioni online finché non riattiverai almeno un professionista. Vuoi procedere?');
+        if(!confirmed) return;
+      }
       const {error:updateError}=await supabaseClient.from('staff').update({active:!person.active}).eq('id',person.id).eq('salon_id',salonId);
       if(updateError){console.error(updateError);toast('Non è stato possibile modificare lo stato.');return;}
       toast(person.active?'Professionista disattivato.':'Professionista riattivato.');
