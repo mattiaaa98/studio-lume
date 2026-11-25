@@ -2192,8 +2192,17 @@ function isSalonClosed(dateKey){
   return salonClosures.some(c => dateKey >= c.start_date && dateKey <= c.end_date);
 }
 
+function minBookableDateKey(){
+  const minimumDate = new Date(Date.now() + 24*60*60*1000);
+  const parts = new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(minimumDate);
+  const get = type => parts.find(part=>part.type===type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
 function isDateDisabled(dateKey){
-  return dateKey < today() || isSalonClosed(dateKey);
+  return dateKey < minBookableDateKey() || isSalonClosed(dateKey);
 }
 
 function nextBookableDate(value){
@@ -2233,7 +2242,7 @@ function renderBookingCalendar(){
       <button type="button" class="agenda-nav" id="bookingNextMonth" aria-label="Mese successivo">›</button>
     </div>
     <div class="booking-calendar-grid">${cells}</div>
-    <div class="booking-calendar-legend">Le date grigie non sono prenotabili. La disponibilità dipende dagli orari e dalle chiusure del salone.</div>
+    <div class="booking-calendar-legend">Le date grigie non sono prenotabili. È necessario prenotare con almeno 24 ore di anticipo; gli orari disponibili rispettano lo stesso limite.</div>
   `;
   $('bookingPrevMonth').onclick = ()=>{
     const minMonth = new Date(today()+'T12:00:00'); minMonth.setDate(1);
@@ -2270,7 +2279,7 @@ async function populateBookingMonthAvailability(year,month){
   const todayKey=today();
   for(let day=1;day<=daysInMonth;day++){
     const key=dateKeyFromDate(new Date(year,month,day));
-    if(key>=todayKey&&!isSalonClosed(key))dates.push(key);
+    if(key>=firstBookableKey&&!isSalonClosed(key))dates.push(key);
   }
   const results=await Promise.all(dates.map(async key=>{
     const {data,error}=await supabaseClient.rpc('get_public_available_times',{
