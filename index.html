@@ -1060,6 +1060,20 @@ table td{
 @media(max-width:850px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.expense-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:500px){.stats-controls,.expense-form{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
 
+
+/* Calendario cliente: selezione solo dal calendario, con celle più ampie. */
+.date-picker-display{cursor:pointer;background:var(--surface);border:1px solid var(--accent);font-weight:700}
+.date-picker-display:focus{outline:2px solid color-mix(in srgb,var(--accent) 25%,transparent);outline-offset:2px}
+.booking-day{min-height:46px}
+@media(max-width:500px){
+  .booking-calendar-scroll{overflow-x:auto;overflow-y:hidden;padding-bottom:7px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .booking-calendar-grid{min-width:460px;gap:7px}
+  .booking-day{min-height:62px;border-radius:12px;gap:5px}
+  .booking-day-number{font-size:17px}
+  .booking-day-count{font-size:10px}
+  .booking-calendar-weekday{font-size:13px;padding:9px 0}
+}
+
 </style>
 </head>
 
