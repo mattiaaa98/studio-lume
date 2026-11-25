@@ -822,11 +822,85 @@ table td{
 @media(max-width:500px){
 
   main{
-    padding:30px 16px;
+    padding:24px 12px;
   }
 
+  /* Schede servizio più compatte su smartphone */
   .services{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .service{
+    padding:12px;
+    border-radius:14px;
+  }
+
+  .service .icon{
+    font-size:17px;
+    line-height:1.15;
+  }
+
+  .service h3{
+    margin:8px 0 5px;
+    font-size:14px;
+    line-height:1.25;
+  }
+
+  .service p{
+    font-size:11px;
+    line-height:1.35;
+    min-height:30px;
+    margin:0;
+  }
+
+  .service .price{
+    margin-top:9px;
+    font-size:14px;
+  }
+
+  /* Calendario più grande e leggibile */
+  .booking-calendar{
+    padding:14px 10px;
+    border-radius:16px;
+  }
+
+  .booking-calendar-toolbar{
+    margin-bottom:14px;
+    gap:12px;
+  }
+
+  .booking-calendar-month{
+    font-size:16px;
+  }
+
+  .booking-calendar-grid{
+    gap:6px;
+  }
+
+  .booking-calendar-weekday{
+    font-size:12px;
+    padding:7px 0;
+  }
+
+  .booking-day{
+    min-height:48px;
+    padding:6px 1px;
+    border-radius:10px;
+    gap:4px;
+  }
+
+  .booking-day-number{
+    font-size:15px;
+  }
+
+  .booking-day-count{
+    font-size:9px;
+  }
+
+  .booking-calendar-legend{
+    font-size:11px;
+    line-height:1.45;
   }
 
   .times{
@@ -835,6 +909,12 @@ table td{
 
   .hero h1{
     font-size:48px;
+  }
+}
+
+@media(max-width:360px){
+  .services{
+    grid-template-columns:1fr;
   }
 }
 
